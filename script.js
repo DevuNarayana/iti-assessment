@@ -1,14 +1,6 @@
 import { db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, getDownloadURL } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Expose functions globally for onclick handlers in index.html
-    window.startAssessment = startAssessment;
-    window.backToTasks = backToTasks;
-    window.closeLightbox = closeLightbox;
-    window.openLightbox = openLightbox;
-    window.deletePhoto = deletePhoto;
-    window.renderWordSection = renderWordSection;
-
     // State
     let currentRole = 'admin'; // Default
 
@@ -252,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="action-btn" style="border-color: var(--primary-color); color: var(--primary-color); padding: 0.25rem 0.75rem;">
                             View
                         </button>
-                        <button class="action-btn" onclick="deleteBatch(${batch.id})" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">
+                        <button class="action-btn" onclick="deleteBatch('${batch.id}')" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">
                             Delete
                         </button>
                     </div>
@@ -261,19 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    // Expose deleteBatch globally
-    window.deleteBatch = async (id) => {
-        if (confirm('Are you sure you want to delete this batch?')) {
-            try {
-                await deleteDoc(doc(db, "batches", id));
-                await syncData();
-                renderBatchTable();
-            } catch (err) {
-                console.error("Delete Batch Error:", err);
-                alert("Failed to delete batch from cloud.");
-            }
-        }
-    };
 
     // Event Listener for Global SSC Dropdown
     if (globalBatchSscSelect) {
@@ -451,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${ssc.name}</td>
                 <td>${ssc.code}</td>
                 <td>
-                    <button class="action-btn" onclick="deleteSsc(${ssc.id})" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">
+                    <button class="action-btn" onclick="deleteSsc('${ssc.id}')" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">
                         Delete
                     </button>
                 </td>
@@ -459,20 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    // Make deleteSsc globally accessible
-    window.deleteSsc = async (id) => {
-        if (confirm('Are you sure you want to delete this SSC?')) {
-            try {
-                await deleteDoc(doc(db, "sscs", id));
-                await syncData();
-                renderSscTable();
-                updateGlobalSscDropdown();
-            } catch (err) {
-                console.error("Delete SSC Error:", err);
-                alert("Failed to delete SSC from cloud.");
-            }
-        }
-    };
 
     // Removed closeModalBtn reference - modal no longer exists
 
@@ -483,9 +448,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateLogin(username, password, role) {
         console.log('Login Attempt:', { username, password, role });
 
-        if (role === 'admin') {
-            return username === 'admin' && password === 'admin';
-        } else if (role === 'assessor') {
+        const isValid = (role === 'admin') ? (username === 'admin' && password === 'admin') : false;
+        if (isValid) return true;
+
+        if (role === 'assessor') {
             // Static login fallback
             if (username === 'assessor' && password === 'assessor') {
                 loggedInUser = { role: 'assessor', username: 'assessor' };
@@ -519,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginView.style.opacity = '';
             loginView.style.transform = '';
 
+            console.log(`Login Success for ${role}. Transitioning views...`);
             if (role === 'admin') {
                 showView(adminView);
             } else {
@@ -529,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Assessor Flow Functions
-    window.renderAssessorTasks = function () {
+    function renderAssessorTasks() {
         const taskList = document.getElementById('assessor-task-list');
         if (!taskList) return;
 
@@ -561,33 +528,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             taskList.innerHTML = '<p style="padding: 2rem; text-align: center;">No tasks assigned.</p>';
         }
-    };
+    }
 
-    window.goToOptions = function (batchId) {
+    function goToOptions(batchId) {
         document.getElementById('assessor-tasks-container').classList.add('hidden');
         document.getElementById('assessment-options-container').classList.remove('hidden');
         document.getElementById('assessor-history-container').classList.add('hidden');
         document.querySelector('#assessor-view h2').textContent = `Assessment for Batch: ${batchId}`;
-    };
+    }
 
-    window.backToTasks = function () {
+    function backToTasks() {
         document.getElementById('assessor-tasks-container').classList.remove('hidden');
         document.getElementById('assessment-options-container').classList.add('hidden');
         document.getElementById('assessor-history-container').classList.add('hidden');
         document.querySelector('#assessor-view h2').textContent = 'My Tasks';
 
-        // Update active nav link
-        document.querySelectorAll('.sidebar nav a').forEach(el => el.classList.remove('active'));
-        document.querySelector('.sidebar nav a:first-child').classList.add('active');
-    };
+        // Update active nav link specific to the current view
+        const currentSidebar = document.querySelector('.view.active .sidebar');
+        if (currentSidebar) {
+            currentSidebar.querySelectorAll('nav a').forEach(el => el.classList.remove('active'));
+            const firstLink = currentSidebar.querySelector('nav a:first-child');
+            if (firstLink) firstLink.classList.add('active');
+        }
+    }
 
-    window.showHistory = function () {
+    function showHistory() {
         document.getElementById('assessor-tasks-container').classList.add('hidden');
         document.getElementById('assessment-options-container').classList.add('hidden');
         document.getElementById('assessor-history-container').classList.remove('hidden');
         document.querySelector('#assessor-view h2').textContent = 'My History';
         renderHistory();
-    };
+    }
 
     async function renderHistory() {
         const container = document.getElementById('history-list');
@@ -685,11 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
         'Group': 1
     };
 
-    window.startAssessment = function (type) {
+    function startAssessment(type) {
         cameraType = type;
         capturedPhotos = [];
         openCameraModal(type);
-    };
+    }
 
     function openCameraModal(type) {
         const modal = document.getElementById('camera-modal');
@@ -742,15 +713,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.getElementById('camera-canvas');
         const context = canvas.getContext('2d');
 
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Set canvas dimensions to match video but limit to max 1280
+        const MAX_WIDTH = 1280;
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+
+        if (width > MAX_WIDTH) {
+            height = (MAX_WIDTH / width) * height;
+            width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
 
         // Draw video frame to canvas
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.drawImage(video, 0, 0, width, height);
 
-        // Get data URL
-        const photoUrl = canvas.toDataURL('image/jpeg');
+        // Get data URL with 0.7 quality compression
+        const photoUrl = canvas.toDataURL('image/jpeg', 0.7);
         capturedPhotos.push(photoUrl);
 
         updateGallery();
@@ -763,18 +743,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const batchId = loggedInUser?.batch?.batchId || 'Default';
-            const uploadedUrls = [];
-
-            // 1. Upload each photo to Firebase Storage
-            for (let i = 0; i < capturedPhotos.length; i++) {
-                const photoData = capturedPhotos[i]; // base64 string
+            // 1. Upload photos in PARALLEL to Firebase Storage
+            const uploadPromises = capturedPhotos.map(async (photoData, i) => {
                 const photoName = `evidence/${batchId}/${cameraType}_${Date.now()}_${i}.jpg`;
                 const storageRef = ref(storage, photoName);
-
                 await uploadString(storageRef, photoData, 'data_url');
-                const downloadUrl = await getDownloadURL(storageRef);
-                uploadedUrls.push(downloadUrl);
-            }
+                return await getDownloadURL(storageRef);
+            });
+
+            const uploadedUrls = await Promise.all(uploadPromises);
 
             // 2. Save assessment metadata to Firestore
             const assessmentData = {
@@ -827,22 +804,22 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    window.deletePhoto = function (index) {
+    function deletePhoto(index) {
         capturedPhotos.splice(index, 1);
         updateGallery();
-    };
+    }
 
     // Lightbox Logic
-    window.openLightbox = function (src) {
+    function openLightbox(src) {
         const modal = document.getElementById('lightbox-modal');
         const img = document.getElementById('lightbox-img');
         img.src = src;
         modal.classList.remove('hidden');
-    };
+    }
 
-    window.closeLightbox = function () {
+    function closeLightbox() {
         document.getElementById('lightbox-modal').classList.add('hidden');
-    };
+    }
 
     function showView(viewElement) {
         viewElement.classList.add('active');
@@ -1037,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.renderWordSection = function () {
         if (wordFilterSsc && wordFilterSsc.options.length === 1) {
-            const sscList = JSON.parse(localStorage.getItem('sscs')) || [];
+            const sscList = sscs;
             sscList.forEach(ssc => {
                 const opt = document.createElement('option');
                 opt.value = ssc.name;
@@ -1285,4 +1262,43 @@ document.addEventListener('DOMContentLoaded', () => {
         return rows;
     }
 
+    // --- Global Exposures for onclick handlers ---
+    window.deleteSsc = async (id) => {
+        if (confirm('Are you sure you want to delete this SSC?')) {
+            try {
+                await deleteDoc(doc(db, "sscs", id));
+                await syncData();
+                renderSscTable();
+                updateGlobalSscDropdown();
+            } catch (err) {
+                console.error("Delete SSC Error:", err);
+                alert("Failed to delete SSC from cloud.");
+            }
+        }
+    };
+
+    window.deleteBatch = async (id) => {
+        if (confirm('Are you sure you want to delete this Batch?')) {
+            try {
+                await deleteDoc(doc(db, "batches", id));
+                await syncData();
+                renderBatchTable();
+            } catch (err) {
+                console.error("Delete Batch Error:", err);
+                alert("Failed to delete Batch from cloud.");
+            }
+        }
+    };
+
+    window.startAssessment = startAssessment;
+    window.backToTasks = backToTasks;
+    window.closeLightbox = closeLightbox;
+    window.openLightbox = openLightbox;
+    window.deletePhoto = deletePhoto;
+    window.renderWordSection = renderWordSection;
+    window.goToOptions = goToOptions;
+    window.showHistory = showHistory;
+    window.renderAssessorTasks = renderAssessorTasks;
+
+    console.log("ITI Assessment Portal Initialized - v2.5 [Firebase Mode]");
 });

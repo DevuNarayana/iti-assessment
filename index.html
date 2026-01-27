@@ -44,7 +44,7 @@
                     </button>
                 </div>
 
-                <form id="login-form">
+                <form id="login-form" onsubmit="return false">
                     <div class="input-group">
                         <input type="text" id="username" required placeholder=" ">
                         <label for="username">Username</label>
@@ -63,11 +63,10 @@
                 </form>
                 <div id="error-message" class="error-msg"></div>
                 <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-                    Version 2
+                    Version 2.5 [Firebase Ready]
                 </div>
             </div>
         </main>
-
         <!-- Admin Dashboard -->
         <main id="admin-view" class="view">
             <div class="dashboard-layout">
@@ -501,7 +500,7 @@
         <img id="lightbox-img" src="" alt="Full size view">
     </div>
 
-    <script type="module" src="script.js?v=1.4"></script>
+    <script type="module" src="script.js?v=2.5"></script>
 </body>
 
 </html>
