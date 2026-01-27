@@ -1,4 +1,7 @@
-import { db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, getDownloadURL } from './firebase-config.js';
+import {
+    db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
+    CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
+} from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // State
@@ -736,22 +739,58 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGallery();
     });
 
+    // Helper: Convert DataURL to Blob
+    function dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+
     document.getElementById('submit-photos-btn').addEventListener('click', async () => {
         const submitBtn = document.getElementById('submit-photos-btn');
+        const defaultText = 'Submit';
+
+        if (capturedPhotos.length === 0) {
+            alert("No photos captured!");
+            return;
+        }
+
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Uploading...';
+        submitBtn.textContent = 'Preparing...';
 
         try {
             const batchId = loggedInUser?.batch?.batchId || 'Default';
-            // 1. Upload photos in PARALLEL to Firebase Storage
+
+            // 1. Upload photos in PARALLEL using Cloudinary API
+            // This avoids the Firebase Storage credit card requirement
             const uploadPromises = capturedPhotos.map(async (photoData, i) => {
-                const photoName = `evidence/${batchId}/${cameraType}_${Date.now()}_${i}.jpg`;
-                const storageRef = ref(storage, photoName);
-                await uploadString(storageRef, photoData, 'data_url');
-                return await getDownloadURL(storageRef);
+                // Update UI progress
+                submitBtn.textContent = `Uploading ${i + 1}/${capturedPhotos.length}...`;
+
+                const formData = new FormData();
+                formData.append('file', photoData); // photoData is a Base64 JPEG string
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error.message || 'Cloudinary upload failed');
+                }
+
+                const data = await response.json();
+                return data.secure_url;
             });
 
             const uploadedUrls = await Promise.all(uploadPromises);
+
+            submitBtn.textContent = 'Saving...';
 
             // 2. Save assessment metadata to Firestore
             const assessmentData = {
@@ -764,14 +803,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await addDoc(collection(db, "assessments"), assessmentData);
 
-            alert(`${cameraType} photos submitted and synced successfully!`);
+            alert(`${cameraType} photos submitted successfully!`);
             closeCamera();
         } catch (err) {
             console.error("Submission Error:", err);
-            alert("Error submitting photos: " + err.message);
+            alert("Error submitting photos. Please check your internet connection.\nDetails: " + err.message);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
+            submitBtn.textContent = defaultText;
         }
     });
 
