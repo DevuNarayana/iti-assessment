@@ -13,8 +13,9 @@ echo Checking for changes...
 %GIT_PATH% status --short
 
 :: Ask for a commit message (optional)
-set /p msg="Enter a description of your changes (or press Enter for 'Auto Update'): "
-if "%msg%"=="" set msg="Auto Update"
+set "msg=Auto Update"
+set /p userMsg="Enter a description of your changes (or press Enter for 'Auto Update'): "
+if not "%userMsg%"=="" set "msg=%userMsg%"
 
 echo.
 echo 1. Adding files...
