@@ -1,0 +1,21 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build/Temp directories
+temp_docx/
+doc_extract/
+node_modules/
+.gemini/
+
+# Generated Reports
+*.docx
+*.zip
+
+# Local environment (if any)
+.env
+.idea/
+.vscode/
+
+# Logs
+*.log

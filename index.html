@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.1">
+</head>
+
+<body>
+    <div id="app">
+        <div class="background-globes">
+            <div class="globe globe-1"></div>
+            <div class="globe globe-2"></div>
+            <div class="globe globe-3"></div>
+        </div>
+
+        <!-- Login View -->
+        <main id="login-view" class="view active">
+            <div class="glass-card login-card">
+                <header class="login-header">
+                    <h1>Welcome Back</h1>
+                    <p>Select your role to continue</p>
+                </header>
+
+                <div class="role-selector">
+                    <button class="role-btn active" data-role="admin">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Admin
+                    </button>
+                    <button class="role-btn" data-role="assessor">
+                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Assessor
+                    </button>
+                </div>
+
+                <form id="login-form">
+                    <div class="input-group">
+                        <input type="text" id="username" required placeholder=" ">
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password" required placeholder=" ">
+                        <label for="password">Password</label>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Sign In</span>
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </form>
+                <div id="error-message" class="error-msg"></div>
+                <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
+                    Version 2
+                </div>
+            </div>
+        </main>
+
+        <!-- Admin Dashboard -->
+        <main id="admin-view" class="view">
+            <div class="dashboard-layout">
+                <aside class="sidebar glass-panel">
+                    <div class="logo">Admin<span>Portal</span></div>
+                    <nav>
+                        <a href="#" class="nav-link active" data-section="ssc-section">Sector Skill Council</a>
+                        <a href="#" class="nav-link" data-section="batches-section">Batches</a>
+                        <a href="#" class="nav-link" data-section="assessors-section">Assessors</a>
+                        <a href="#" class="nav-link" data-section="evidence-section">Evidence</a>
+                        <a href="#" class="nav-link" data-section="word-section">Word</a>
+                    </nav>
+                </aside>
+
+                <section class="content">
+                    <header class="glass-panel top-bar">
+                        <div class="header-left">
+                            <h2>Admin Dashboard</h2>
+                            <div class="user-profile">Admin User</div>
+                        </div>
+                        <button id="logout-admin" class="action-btn logout-header-btn">
+                            Logout
+                        </button>
+                    </header>
+
+                    <!-- Batches Section -->
+                    <div id="batches-section" class="admin-section">
+                        <div class="glass-panel" style="padding: 2rem; border-radius: 16px;">
+                            <div class="section-header">
+                                <div class="section-info">
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <select id="global-batch-ssc"
+                                            style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; min-width: 250px; font-size: 1rem;">
+                                            <option value="" disabled selected>Select Sector Skill Council</option>
+                                        </select>
+                                        <span
+                                            style="border-left: 1px solid var(--glass-border); padding-left: 1rem; color: var(--text-muted);">
+                                            Total Batches: <strong id="batch-count"
+                                                style="color: var(--primary-color);">0</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="section-actions">
+                                    <button class="action-btn primary hidden" id="add-batch-btn">
+                                        + Create Batch
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.#</th>
+                                            <th>Date</th>
+                                            <th>Month</th>
+                                            <th>SSC</th>
+                                            <th>Job Role</th>
+                                            <th>Batch ID</th>
+                                            <th>Skill Hub Name</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="batches-table-body">
+                                        <tr>
+                                            <td colspan="8"
+                                                style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                                No batches found.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assessors Section -->
+                    <div id="assessors-section" class="admin-section">
+                        <div class="glass-panel" style="padding: 2rem; border-radius: 16px;">
+                            <div class="section-header">
+                                <div class="section-info">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-9-2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
+                                    </svg>
+                                    <span>Assessor Credentials</span>
+                                </div>
+                                <div class="section-actions">
+                                    <select id="assessor-filter-ssc"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; margin-right: 1rem;">
+                                        <option value="">Select SSC</option>
+                                    </select>
+                                    <select id="assessor-filter-batch"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none;"
+                                        disabled>
+                                        <option value="">Select Batch</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="assessor-credentials-container"
+                                style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                                <div style="text-align: center; color: var(--text-muted);">
+                                    Please select a Sector Skill Council and Batch to view login credentials.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SSC Section -->
+                    <div id="ssc-section" class="admin-section active">
+                        <div class="glass-panel" style="padding: 2rem; border-radius: 16px;">
+                            <div class="section-header">
+                                <div class="section-info">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" fill="#6366f1" />
+                                    </svg>
+                                    <span>Total Records: <strong id="ssc-count">0</strong></span>
+                                </div>
+                                <div class="section-actions">
+                                    <button class="action-btn" id="export-ssc-btn">
+                                        Export To ▼
+                                    </button>
+                                    <button class="action-btn primary" id="add-ssc-btn">
+                                        Add New SSC
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.#</th>
+                                            <th>SSC Name</th>
+                                            <th>SSC Code</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ssc-table-body">
+                                        <tr>
+                                            <td colspan="4"
+                                                style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                                No SSCs added yet.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Section -->
+                    <div id="evidence-section" class="admin-section">
+                        <div class="glass-panel" style="padding: 2rem; border-radius: 16px;">
+                            <div class="section-header">
+                                <div class="section-info">
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Total Evidence: <strong id="evidence-count">0</strong></span>
+                                </div>
+                                <div class="section-actions">
+                                    <select id="evidence-filter-ssc"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; margin-right: 1rem;">
+                                        <option value="">Select SSC</option>
+                                    </select>
+                                    <select id="evidence-filter-batch"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none;"
+                                        disabled>
+                                        <option value="">Select Batch</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="evidence-grid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                                <!-- Evidence items rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Word Section -->
+                    <div id="word-section" class="admin-section">
+                        <div class="glass-panel" style="padding: 2rem; border-radius: 16px;">
+                            <div class="section-header">
+                                <div class="section-info">
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                                    </svg>
+                                    <span>Word Report Generator</span>
+                                </div>
+                                <div class="section-actions">
+                                    <select id="word-filter-ssc"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; margin-right: 1rem;">
+                                        <option value="">Select SSC</option>
+                                    </select>
+                                    <select id="word-filter-batch"
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none;"
+                                        disabled>
+                                        <option value="">Select Batch</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="word-preview-container"
+                                style="text-align: center; color: var(--text-muted); padding: 3rem; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <p>Select a Batch to generate the Evidence Report.</p>
+                                <button id="generate-word-btn" class="action-btn primary"
+                                    style="margin-top: 1.5rem; display: none; background: #2563eb;">
+                                    Download Word Document
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add SSC Modal -->
+                    <div id="add-ssc-modal" class="modal hidden">
+                        <div class="glass-card modal-content">
+                            <h3>Add New Sector</h3>
+                            <form id="add-ssc-form">
+                                <div class="input-group">
+                                    <input type="text" id="ssc-name" required placeholder=" ">
+                                    <label for="ssc-name">Skill Council Name</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="text" id="ssc-code" required placeholder=" ">
+                                    <label for="ssc-code">Skill Council Code</label>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="button" id="cancel-ssc-btn" class="action-btn"
+                                        style="flex: 1;">Cancel</button>
+                                    <button type="submit" class="action-btn primary"
+                                        style="flex: 1; background: #10b981;">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Add Batch Modal -->
+                    <div id="add-batch-modal" class="modal hidden">
+                        <div class="glass-card modal-content">
+                            <h3>Create New Batch</h3>
+                            <form id="create-batch-form">
+                                <div class="input-group">
+                                    <input type="number" id="batch-sr" required placeholder=" ">
+                                    <label for="batch-sr">Sr. No.</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="date" id="batch-day" required placeholder=" ">
+                                    <label for="batch-day">Date</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="month" id="batch-month" required placeholder=" ">
+                                    <label for="batch-month">Month</label>
+                                </div>
+                                <!-- SSC Input Removed -->
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="text" id="batch-job-role" required placeholder=" ">
+                                    <label for="batch-job-role">Job Role</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="text" id="batch-id" required placeholder=" ">
+                                    <label for="batch-id">Batch ID</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="text" id="batch-skill-hub" required placeholder=" ">
+                                    <label for="batch-skill-hub">Name of the Skill Hub</label>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="button" id="cancel-batch-btn" class="action-btn"
+                                        style="flex: 1;">Cancel</button>
+                                    <button type="submit" class="action-btn primary"
+                                        style="flex: 1; background: #10b981;">Create Batch</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Add Assessor Modal -->
+                    <div id="add-assessor-modal" class="modal hidden">
+                        <div class="glass-card modal-content">
+                            <h3>Add New Assessor</h3>
+                            <form id="add-assessor-form">
+                                <div class="input-group">
+                                    <input type="text" id="assessor-name" required placeholder=" ">
+                                    <label for="assessor-name">Assessor Name</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <input type="text" id="assessor-id" required placeholder=" ">
+                                    <label for="assessor-id">Assessor ID</label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <select id="assessor-ssc" required
+                                        style="padding: 0.75rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; width: 100%; font-size: 1rem;">
+                                        <option value="" disabled selected>Select Sector Skill Council</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="button" id="cancel-assessor-btn" class="action-btn"
+                                        style="flex: 1;">Cancel</button>
+                                    <button type="submit" class="action-btn primary"
+                                        style="flex: 1; background: #10b981;">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="batch-success-modal" class="modal hidden">
+                        <div class="glass-card modal-content">
+                            <div class="success-icon">
+                                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3>Batch Created Successfully!</h3>
+                            <p>A new login has been generated for this batch.</p>
+
+                            <div class="credentials-box">
+                                <div class="cred-row">
+                                    <span>Username (Batch ID):</span>
+                                    <strong id="new-batch-username">--</strong>
+                                </div>
+                                <div class="cred-row">
+                                    <span>Password:</span>
+                                    <strong>password123</strong>
+                                </div>
+                            </div>
+
+                            <button id="close-modal-btn" class="action-btn primary">Done</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Assessor Dashboard -->
+        <main id="assessor-view" class="view">
+            <div class="dashboard-layout">
+                <aside class="sidebar glass-panel">
+                    <div class="logo">Assessor<span>Hub</span></div>
+                    <nav>
+                        <a href="#" class="active">My Tasks</a>
+                        <a href="#">History</a>
+                        <a href="#" id="logout-assessor" class="logout">Logout</a>
+                    </nav>
+                </aside>
+                <section class="content">
+                    <header class="glass-panel top-bar">
+                        <h2>My Tasks</h2>
+                        <div class="user-profile">Assessor User</div>
+                    </header>
+                    <div id="assessor-tasks-container">
+                        <div class="task-list glass-panel" id="assessor-task-list">
+                            <!-- Tasks will be rendered here dynamically -->
+                        </div>
+                    </div>
+
+                    <div id="assessment-options-container" class="hidden" style="margin-top: 2rem;">
+                        <div class="options-grid">
+                            <div class="option-card glass-card" onclick="startAssessment('Theory')">
+                                <div class="option-icon">📝</div>
+                                <h3>Theory</h3>
+                                <p>Written assessment</p>
+                            </div>
+                            <div class="option-card glass-card" onclick="startAssessment('Practical')">
+                                <div class="option-icon">⚙️</div>
+                                <h3>Practical</h3>
+                                <p>Hands-on skill test</p>
+                            </div>
+                            <div class="option-card glass-card" onclick="startAssessment('Viva')">
+                                <div class="option-icon">🎤</div>
+                                <h3>Viva</h3>
+                                <p>Oral examination</p>
+                            </div>
+                            <div class="option-card glass-card" onclick="startAssessment('Group')">
+                                <div class="option-icon">👥</div>
+                                <h3>Group</h3>
+                                <p>Collaborative task</p>
+                            </div>
+                        </div>
+                        <button class="action-btn" onclick="backToTasks()" style="margin-top: 2rem;">
+                            ← Back to My Tasks
+                        </button>
+                    </div>
+
+                    <div id="assessor-history-container" class="hidden" style="margin-top: 2rem;">
+                        <button class="action-btn" onclick="backToTasks()" style="margin-bottom: 1rem;">
+                            ← Back to My Tasks
+                        </button>
+                        <div id="history-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- History items will be rendered here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <!-- Camera Capture Modal -->
+    <div id="camera-modal" class="modal hidden" style="z-index: 2000;">
+        <div class="glass-card modal-content camera-content">
+            <div class="camera-header">
+                <h3 id="camera-title">Capture Photos</h3>
+                <span id="photo-counter">0/0</span>
+            </div>
+
+            <div class="camera-viewport">
+                <video id="camera-feed" autoplay playsinline></video>
+                <canvas id="camera-canvas" class="hidden"></canvas>
+            </div>
+
+            <div class="camera-gallery" id="camera-gallery">
+                <!-- Captured photos will appear here -->
+            </div>
+
+            <div class="camera-controls">
+                <button id="close-camera-btn" class="action-btn">Cancel</button>
+                <button id="capture-btn" class="action-btn primary capture-btn">
+                    <div class="shutter-inner"></div>
+                </button>
+                <button id="submit-photos-btn" class="action-btn primary" disabled>Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox-modal" class="modal hidden" onclick="closeLightbox()" style="z-index: 3000;">
+        <span
+            style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">&times;</span>
+        <img id="lightbox-img" src="" alt="Full size view">
+    </div>
+
+    <script type="module" src="script.js?v=1.4"></script>
+</body>
+
+</html>

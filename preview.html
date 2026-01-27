@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Report Preview</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Calibri', 'Arial', sans-serif;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 24pt;
+            /* Simulates the "Measure from: Edge of page 24pt" setting in Word */
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .border-frame {
+            /* The 6pt Page Border (Full Border) - INSET from edge */
+            border: 6pt solid black;
+            flex: 1;
+            padding: 0.5in;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .photo-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .photo-grid td {
+            width: 50%;
+            text-align: center;
+            padding: 2px;
+            border: none;
+        }
+
+        .photo {
+            width: 3.54in;
+            height: 2.53in;
+            object-fit: cover;
+            /* The 4.5pt Photo Border */
+            border: 4.5pt solid black;
+            margin: 0.26in auto 0.1in auto;
+            background-color: #ddd;
+            /* Placeholder color */
+        }
+
+        .footer {
+            text-align: right;
+            font-size: 9pt;
+            color: gray;
+            margin-top: 20px;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="a4-page">
+        <div class="border-frame">
+            <!-- Header -->
+            <div class="header">
+                <p>Name of the Skill Hub: Government ITI</p>
+                <p>Batch ID: App2025-06-28 08:36:59</p>
+                <p>Job Role: Sewing Machine Operator - Knits</p>
+            </div>
+
+            <!-- Photos -->
+            <table class="photo-grid">
+                <tr>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+1" class="photo"></td>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+2" class="photo"></td>
+                </tr>
+                <tr>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+3" class="photo"></td>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+4" class="photo"></td>
+                </tr>
+                <tr>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+5" class="photo"></td>
+                    <td><img src="https://via.placeholder.com/352x252.png?text=Photo+6" class="photo"></td>
+                </tr>
+            </table>
+
+            <!-- Footer -->
+            <div class="footer">
+                Generated on 1/27/2026
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
