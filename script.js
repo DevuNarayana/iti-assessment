@@ -1300,5 +1300,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.showHistory = showHistory;
     window.renderAssessorTasks = renderAssessorTasks;
 
-    console.log("ITI Assessment Portal Initialized - v2.5 [Firebase Mode]");
+    console.log("ITI Assessment Portal Initialized - v4.0 [Firebase Mode]");
 });
