@@ -1,4 +1,4 @@
-// Version 41.0 - Final Squeeze (3.33x2.82) [Force Update: 2026-01-28 15:02]
+// Version 42.0 - Zero Tolerance (3.33x2.82) [Force Update: 2026-01-28 15:05]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1247,12 +1247,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>Evidence Report</title>
                 <style>
-                    /* Page Setup - Symmetrical A4 */
+                    /* Page Setup - Zero Tolerance A4 */
                     @page Section1 {
                         size: A4;
                         margin: 0.3in; 
                         mso-header-margin: 0.1in; 
                         mso-footer-margin: 0.1in;
+                        mso-page-orientation: portrait;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1263,11 +1264,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         font-family: 'Calibri', 'Arial', sans-serif; 
                         margin: 0;
                         padding: 0;
+                        mso-line-height-rule: exactly;
                     }
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 5pt; /* Extremely tight header */
+                        margin-bottom: 0pt; /* ZERO margin */
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.0;
@@ -1276,32 +1278,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -75pt; /* Stronger pull-up to kill 2nd page */
+                        margin-bottom: -100pt; /* ZERO TOLERANCE PULL-UP */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Reduced to 10.2in for safer single-page fit with large photos -->
-                    <table class="main-table" width="100%" height="10.2in" cellspacing="0" cellpadding="0" style="height: 10.2in;">
+                    <!-- Tight 9.8in height to guarantee single page with 2.82in photos -->
+                    <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in; mso-padding-alt: 0 0 0 0;">
                         <tr>
-                            <td height="10.2in" style="border: 6pt solid black; padding: 5pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.2in;">
+                            <td height="9.8in" style="border: 6pt solid black; padding: 2pt; vertical-align: top; text-align: center; height: 9.8in;">
                                 
                                 <div class="header-content">
-                                    <p style="margin: 0; padding: 0.5pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                    <p style="margin: 0; padding: 0.5pt;">Batch ID: ${batch.batchId}</p>
-                                    <p style="margin: 0; padding: 0.5pt;">Job Role: ${batch.jobRole}</p>
+                                    <p style="margin: 0; padding: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                    <p style="margin: 0; padding: 0;">Batch ID: ${batch.batchId}</p>
+                                    <p style="margin: 0; padding: 0;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="3" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="2" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
                             </td>
                         </tr>
                     </table>
-                    <!-- Hidden Trailing Paragraph -->
-                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all; height: 0; overflow: hidden;">&nbsp;</p>
+                    <!-- Hidden Trailing Paragraph - Maximum Deletion -->
+                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all; height: 0; overflow: hidden; mso-element:header;">&nbsp;</p>
                 </div>
             </body>
             </html>
