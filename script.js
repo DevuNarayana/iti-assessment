@@ -1,4 +1,4 @@
-// Version 43.0 - PDF Download Integration [Force Update: 2026-01-28 15:08]
+// Version 44.0 - PDF Layout Sync [Force Update: 2026-01-28 15:14]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1335,11 +1335,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                 };
 
-                // Add necessary base styles for the hidden element
+                // Add necessary base styles for the hidden element to match Word exactly
                 const style = document.createElement('style');
                 style.textContent = `
-                    .Section1 { width: 8.27in; padding: 0.3in; box-sizing: border-box; }
-                    .main-table { width: 100%; height: 9.8in; border-collapse: collapse; }
+                    * { box-sizing: border-box; }
+                    .Section1 { 
+                        width: 100%; 
+                        padding: 0; 
+                        margin: 0;
+                        background: white;
+                    }
+                    .main-table { 
+                        width: 100%; 
+                        height: 9.8in; 
+                        border-collapse: collapse; 
+                        table-layout: fixed;
+                    }
+                    .header-content {
+                        text-align: center;
+                        margin-bottom: 0pt;
+                        font-weight: bold;
+                        font-size: 14pt;
+                        line-height: 1.0;
+                    }
+                    img { display: block; }
                 `;
                 element.prepend(style);
 
