@@ -1,4 +1,4 @@
-// Version 28.0 - Final Layout Push [Force Update: 2026-01-28 14:15]
+// Version 30.0 - Balanced Layout Push [Force Update: 2026-01-28 14:20]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1250,13 +1250,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.4in; 
-                        mso-header-margin: 0.4in; 
-                        mso-footer-margin: 0.4in;
+                        margin: 0.5in; 
+                        mso-header-margin: 0.5in; 
+                        mso-footer-margin: 0.5in;
                     }
                     div.Section1 { 
                         page: Section1;
-                        mso-line-height-rule: exactly;
+                        mso-element:header;
                     }
                     
                     body { 
@@ -1276,16 +1276,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -30pt; /* Pulls up to hide trailing paragraph */
+                        margin-bottom: -40pt; /* Aggressive pull-up */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Increased height to 9.8in to fit larger photos -->
-                    <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in;">
+                    <table class="main-table" width="100%" height="9.4in" cellspacing="0" cellpadding="0" style="height: 9.4in;">
                         <tr>
-                            <td height="9.8in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.8in;">
+                            <td height="9.4in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.4in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1293,7 +1292,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <!-- Tightened cell spacing to allow larger photos -->
                                 <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
@@ -1301,8 +1299,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             </td>
                         </tr>
                     </table>
-                    <!-- Hidden Trailing Paragraph -->
-                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all;">&nbsp;</p>
+                    <!-- Hidden Trailing Paragraph - Extremely small -->
+                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all; height: 0; overflow: hidden;">&nbsp;</p>
                 </div>
             </body>
             </html>
@@ -1336,20 +1334,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Left Cell - Increased photo size
+            // Left Cell - Balanced photo size
             rows += '<td align="center" style="padding: 2pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="300" height="215" style="width:3.1in; height:2.2in; display:block;">`;
+            rows += `<img src="${p1}" width="270" height="195" style="width:2.8in; height:2.0in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Right Cell - Increased photo size
+                // Right Cell - Balanced photo size
                 rows += '<td align="center" style="padding: 2pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="300" height="215" style="width:3.1in; height:2.2in; display:block;">`;
+                rows += `<img src="${p2}" width="270" height="195" style="width:2.8in; height:2.0in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
