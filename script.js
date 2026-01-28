@@ -1306,14 +1306,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td height="100%" style="border: 6pt solid black; padding: 25pt; vertical-align: top; text-align: center;">
                                 
                                 <!-- Symmetrical Header -->
-                                <div class="header-content">
+                                <div class="header-content" style="margin-bottom: 20pt;">
                                     <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
                                     <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
                                     <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
                                 <!-- Photo Grid -->
-                                <table width="100%" cellspacing="15" cellpadding="0" style="margin: 0 auto;">
+                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
@@ -1354,19 +1354,19 @@ document.addEventListener('DOMContentLoaded', () => {
             rows += '<tr>';
 
             // Left Cell
-            rows += '<td align="center" style="padding: 10pt;">';
+            rows += '<td align="center" style="padding: 5pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
-            rows += `<img src="${p1}" width="330" height="235" style="width:3.43in; height:2.45in; display:block;">`;
+            rows += `<img src="${p1}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
                 // Right Cell
-                rows += '<td align="center" style="padding: 10pt;">';
+                rows += '<td align="center" style="padding: 5pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
-                rows += `<img src="${p2}" width="330" height="235" style="width:3.43in; height:2.45in; display:block;">`;
+                rows += `<img src="${p2}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
