@@ -1,4 +1,4 @@
-// Version 47.0 - Total PDF Alignment [Force Update: 2026-01-28 15:27]
+// Version 48.0 - PDF Blank Page Fix [Force Update: 2026-01-28 15:30]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1318,61 +1318,57 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             if (isPdf) {
-                // PDF Generation using html2pdf.js - Version 47.0 Overhaul
-                const pdfContainer = document.createElement('div');
-                pdfContainer.style.position = 'absolute';
-                pdfContainer.style.left = '-9999px';
-                pdfContainer.style.top = '0';
-                pdfContainer.style.width = '8.27in'; // Force A4 Width
-                pdfContainer.style.background = 'white';
+                // PDF Generation - Version 48.0 (Reverting to safer DOM method)
+                const element = document.createElement('div');
+                element.innerHTML = htmlContent;
 
-                // Construct PDF-specific HTML to avoid DOCTYPE/HTML/BODY nesting issues
-                const pdfHtml = `
-                    <div style="width: 8.27in; min-height: 11.69in; padding: 0.3in; background: white; font-family: Calibri, Arial, sans-serif;">
-                        <div style="width: 100%; border: 7pt solid black; height: 10.8in; padding: 15pt; box-sizing: border-box; position: relative;">
-                            
-                            <div style="text-align: center; margin-bottom: 20pt; color: black !important; font-weight: bold; font-size: 14pt;">
-                                <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
-                                <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
-                            </div>
-
-                            <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
-                                ${generateGridRows(photosToUse)}
-                            </table>
-
-                        </div>
-                    </div>
+                // Add explicit PDF styles to match Word perfectly
+                const style = document.createElement('style');
+                style.textContent = `
+                    * { color: black !important; box-sizing: border-box; }
+                    .Section1 { 
+                        width: 100%; 
+                        padding: 0.3in; 
+                        background: white !important;
+                    }
+                    .main-table { 
+                        width: 100%; 
+                        height: 10.4in; /* Safe height for PDF */
+                        border-collapse: collapse; 
+                        table-layout: fixed;
+                        border: 6.5pt solid black;
+                    }
+                    .header-content {
+                        text-align: center;
+                        margin-bottom: 20pt;
+                        font-weight: bold;
+                        font-size: 14pt;
+                        line-height: 1.1;
+                    }
+                    img { 
+                        display: block;
+                        width: 3.33in !important;
+                        height: 2.82in !important;
+                        border: 4.5pt solid black !important;
+                        margin: 0 auto;
+                    }
                 `;
-
-                pdfContainer.innerHTML = pdfHtml;
-                document.body.appendChild(pdfContainer);
-
-                // Inject specific black-border styles for images inside PDF container
-                const imgs = pdfContainer.querySelectorAll('img');
-                imgs.forEach(img => {
-                    img.style.width = '3.33in';
-                    img.style.height = '2.82in';
-                    img.style.display = 'block';
-                    img.style.margin = '0 auto';
-                    img.style.border = '4.5pt solid black';
-                });
+                element.prepend(style);
 
                 const opt = {
                     margin: 0,
                     filename: `Evidence_Report_${batch.batchId}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
+                    image: { type: 'jpeg', quality: 1 },
                     html2canvas: {
                         scale: 2,
                         useCORS: true,
+                        logging: false,
                         backgroundColor: '#ffffff'
                     },
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                 };
 
-                html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                    document.body.removeChild(pdfContainer);
-                });
+                html2pdf().set(opt).from(element).save();
                 return;
             }
 
