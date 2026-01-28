@@ -1249,12 +1249,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.4in; 
-                        mso-header-margin: 0.4in; 
-                        mso-footer-margin: 0.4in;
+                        margin: 0.3in; 
+                        mso-header-margin: 0.3in; 
+                        mso-footer-margin: 0.3in;
                     }
                     div.Section1 { 
                         page: Section1;
+                        mso-element:header;
                     }
                     
                     body { 
@@ -1264,10 +1265,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         padding: 0;
                     }
 
-                    /* Symmetrical Content Wrapper */
                     .header-content {
                         text-align: center;
-                        margin-bottom: 15pt;
+                        margin-bottom: 20pt;
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.5;
@@ -1276,9 +1276,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </head>
             <body>
                 <div class="Section1">
-                    <table width="100%" height="10.82in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
+                    <table width="100%" height="11.0in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 11.0in;">
                         <tr>
-                            <td height="10.82in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center;">
+                            <td height="11.0in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 11.0in;">
                                 
                                 <!-- Symmetrical Header -->
                                 <div class="header-content" style="margin-bottom: 20pt;">
