@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.45in; 
-                        mso-header-margin: 0.4in; 
-                        mso-footer-margin: 0.4in;
+                        margin: 0.4in; 
+                        mso-header-margin: 0.3in; 
+                        mso-footer-margin: 0.3in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1276,15 +1276,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -45pt; /* Extremely aggressive pull-up */
+                        margin-bottom: -50pt; /* Maximum pull-up to prevent 2nd page */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <table class="main-table" width="100%" height="9.7in" cellspacing="0" cellpadding="0" style="height: 9.7in;">
+                    <!-- Increased height to 10.6in to fill the A4 page completely -->
+                    <table class="main-table" width="100%" height="10.6in" cellspacing="0" cellpadding="0" style="height: 10.6in;">
                         <tr>
-                            <td height="9.7in" style="border: 6pt solid black; padding: 8pt; vertical-align: top; text-align: center; height: 9.7in;">
+                            <td height="10.6in" style="border: 6pt solid black; padding: 5pt; vertical-align: top; text-align: center; height: 10.6in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1334,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Ultimate Fit photo size
+            // Full Page Fill photo size
             rows += '<td align="center" style="padding: 1pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="290" height="210" style="width:3.0in; height:2.15in; display:block;">`;
+            rows += `<img src="${p1}" width="320" height="260" style="width:3.3in; height:2.7in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Ultimate Fit photo size
+                // Full Page Fill photo size
                 rows += '<td align="center" style="padding: 1pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="290" height="210" style="width:3.0in; height:2.15in; display:block;">`;
+                rows += `<img src="${p2}" width="320" height="260" style="width:3.3in; height:2.7in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
