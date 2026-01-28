@@ -1,4 +1,4 @@
-// Version 51.0 - PDF Fragment Overhaul [Force Update: 2026-01-28 15:39]
+// Version 52.0 - PDF Border & Page Fix [Force Update: 2026-01-28 15:52]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1318,16 +1318,16 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             if (isPdf) {
-                // PDF Generation - Version 51.0 (Clean Fragment Method)
+                // PDF Generation - Version 52.0 (Fixing Double Border & 2-Page Spill)
                 const element = document.createElement('div');
                 element.style.width = '8.27in';
                 element.style.background = 'white';
 
-                // Construct a CLEAN HTML snippet specifically for PDF (No nested <html> tags)
+                // Construct a CLEAN HTML snippet specifically for PDF
                 element.innerHTML = `
                     <div style="width: 8.27in; padding: 0.3in; background: white; color: black; font-family: Calibri, Arial, sans-serif;">
-                        <div style="width: 100%; border: 7.5pt solid black; min-height: 11.2in; padding: 15pt; box-sizing: border-box;">
-                            <div style="text-align: center; margin-bottom: 25pt; font-weight: bold; font-size: 14pt; color: black !important;">
+                        <div style="width: 100%; border: 7.5pt solid black; min-height: 10.6in; padding: 10pt; box-sizing: border-box;">
+                            <div style="text-align: center; margin-bottom: 20pt; font-weight: bold; font-size: 14pt; color: black !important;">
                                 <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
                                 <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
                                 <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
@@ -1339,14 +1339,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // Force image styling for PDF
+                // Set EXACT image dimensions for PDF - REMOVED REPEAT BORDER
                 const imgs = element.querySelectorAll('img');
                 imgs.forEach(img => {
                     img.style.width = '3.33in';
                     img.style.height = '2.82in';
                     img.style.display = 'block';
                     img.style.margin = '0 auto';
-                    img.style.border = '4.5pt solid black';
+                    // NO EXTRA BORDER HERE - It's already in generateGridRows
                 });
 
                 const opt = {
