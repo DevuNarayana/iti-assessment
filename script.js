@@ -1,4 +1,4 @@
-// Version 38.0 - Fixed Border & Deep Downshift [Force Update: 2026-01-28 14:50]
+// Version 39.0 - Precise Photo Size (3.33x2.5) [Force Update: 2026-01-28 14:53]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.5in; 
-                        mso-header-margin: 0.5in; 
-                        mso-footer-margin: 0.5in;
+                        margin: 0.4in; 
+                        mso-header-margin: 0.4in; 
+                        mso-footer-margin: 0.4in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1267,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 65pt; /* Deep downshift as requested */
+                        margin-bottom: 20pt; /* Adjusted to fit larger photos */
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.1;
@@ -1276,16 +1276,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -40pt; /* Safe 1-page pull-up */
+                        margin-bottom: -55pt; /* Strong pull-up for larger photo height */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Reverted to the "Fixed Border" height of 9.2in -->
-                    <table class="main-table" width="100%" height="9.2in" cellspacing="0" cellpadding="0" style="height: 9.2in;">
+                    <!-- Fixed Border height maintained at 9.6in to accommodate 7.5in photo total height -->
+                    <table class="main-table" width="100%" height="9.6in" cellspacing="0" cellpadding="0" style="height: 9.6in;">
                         <tr>
-                            <td height="9.2in" style="border: 6pt solid black; padding: 15pt; vertical-align: top; text-align: center; height: 9.2in;">
+                            <td height="9.6in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.6in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1293,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="4" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
@@ -1335,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Version 38.0 - Balanced Size to fill gap while shifted down
-            rows += '<td align="center" style="padding: 2pt;">';
-            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
+            // Version 39.0 - EXACT dimensions: 3.33in x 2.5in
+            rows += '<td align="center" style="padding: 1pt;">';
+            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
+            rows += `<img src="${p1}" width="320" height="240" style="width:3.33in; height:2.5in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Version 38.0 - Balanced Size
-                rows += '<td align="center" style="padding: 2pt;">';
-                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
+                // Version 39.0 - EXACT dimensions: 3.33in x 2.5in
+                rows += '<td align="center" style="padding: 1pt;">';
+                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
+                rows += `<img src="${p2}" width="320" height="240" style="width:3.33in; height:2.5in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
