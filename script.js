@@ -1,4 +1,4 @@
-// Version 37.0 - Down & Stretch Push [Force Update: 2026-01-28 14:45]
+// Version 38.0 - Fixed Border & Deep Downshift [Force Update: 2026-01-28 14:50]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1267,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 35pt; /* More downshift to move photos lower */
+                        margin-bottom: 65pt; /* Deep downshift as requested */
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.1;
@@ -1276,16 +1276,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -45pt; /* Aggressive pull-up */
+                        margin-bottom: -40pt; /* Safe 1-page pull-up */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Increased to 9.6in to stretch towards the bottom -->
-                    <table class="main-table" width="100%" height="9.6in" cellspacing="0" cellpadding="0" style="height: 9.6in;">
+                    <!-- Reverted to the "Fixed Border" height of 9.2in -->
+                    <table class="main-table" width="100%" height="9.2in" cellspacing="0" cellpadding="0" style="height: 9.2in;">
                         <tr>
-                            <td height="9.6in" style="border: 6pt solid black; padding: 15pt; vertical-align: top; text-align: center; height: 9.6in;">
+                            <td height="9.2in" style="border: 6pt solid black; padding: 15pt; vertical-align: top; text-align: center; height: 9.2in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1335,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Version 37.0 - Stretched to 2.3in height
+            // Version 38.0 - Balanced Size to fill gap while shifted down
             rows += '<td align="center" style="padding: 2pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="295" height="220" style="width:3.1in; height:2.3in; display:block;">`;
+            rows += `<img src="${p1}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Version 37.0 - Stretched to 2.3in height
+                // Version 38.0 - Balanced Size
                 rows += '<td align="center" style="padding: 2pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="295" height="220" style="width:3.1in; height:2.3in; display:block;">`;
+                rows += `<img src="${p2}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
