@@ -1249,13 +1249,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.5in; 
-                        mso-header-margin: 0.5in; 
-                        mso-footer-margin: 0.5in;
+                        margin: 0.4in; 
+                        mso-header-margin: 0.4in; 
+                        mso-footer-margin: 0.4in;
                     }
                     div.Section1 { 
                         page: Section1;
-                        mso-element:header; 
                     }
                     
                     body { 
@@ -1266,44 +1265,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     /* Symmetrical Content Wrapper */
-                    .page-border-container {
-                        width: 100%;
-                        border: 6pt solid black;
-                        padding: 24pt;
-                        min-height: 9.3in; /* Fills A4 height for bottom border symmetry */
-                        box-sizing: border-box;
-                    }
-                    
                     .header-content {
                         text-align: center;
-                        margin-bottom: 30pt;
+                        margin-bottom: 15pt;
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.5;
-                    }
-                    
-                    .photo-grid-table {
-                        width: 100%;
-                        border-collapse: separate;
-                        border-spacing: 15pt;
-                    }
-
-                    .photo-cell {
-                        text-align: center;
-                        vertical-align: middle;
-                    }
-                    
-                    .photo-border-wrapper {
-                        border: 4.5pt solid black;
-                        display: inline-block;
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <table width="100%" height="98%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
+                    <table width="100%" height="10.5in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
                         <tr>
-                            <td height="100%" style="border: 6pt solid black; padding: 25pt; vertical-align: top; text-align: center;">
+                            <td height="10.5in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center;">
                                 
                                 <!-- Symmetrical Header -->
                                 <div class="header-content" style="margin-bottom: 20pt;">
