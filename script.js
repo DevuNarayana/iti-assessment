@@ -1351,27 +1351,73 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteBatch = async (id) => {
-        if (confirm('Are you sure you want to delete this Batch?')) {
+        if (confirm(`Are you sure you want to delete Batch "${id}"? This will also delete ALL associated evidence photos from the cloud.`)) {
             try {
+                // 1. Find all evidence for this batch
+                const q = query(collection(db, "assessments"), where("batchId", "==", id));
+                const snapshot = await getDocs(q);
+                const allPhotoUrls = [];
+                const assessmentDocIds = [];
+
+                snapshot.forEach(doc => {
+                    assessmentDocIds.push(doc.id);
+                    if (doc.data().photos) {
+                        allPhotoUrls.push(...doc.data().photos);
+                    }
+                });
+
+                // 2. Delete all photos from Cloudinary
+                if (allPhotoUrls.length > 0) {
+                    console.log(`Deleting ${allPhotoUrls.length} photos from cloud...`);
+                    await fetch('/api/delete-photos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ urls: allPhotoUrls })
+                    });
+                }
+
+                // 3. Delete all assessment documents from Firestore
+                await Promise.all(assessmentDocIds.map(docId => deleteDoc(doc(db, "assessments", docId))));
+
+                // 4. Delete the batch document
                 await deleteDoc(doc(db, "batches", id));
+
                 await syncData();
                 renderBatchTable();
+                alert(`Batch ${id} and its evidence deleted successfully.`);
             } catch (err) {
                 console.error("Delete Batch Error:", err);
-                alert("Failed to delete Batch from cloud.");
+                alert("Failed to delete Batch or its photos.");
             }
         }
     };
 
     window.deleteEvidence = async (id) => {
-        if (confirm('Are you sure you want to delete this evidence? This action cannot be undone.')) {
+        if (confirm('Are you sure you want to delete this evidence? This action will also remove the photos from the cloud.')) {
             try {
-                await deleteDoc(doc(db, "assessments", id));
+                // 1. Get the document first to find photo URLs
+                const docRef = doc(db, "assessments", id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists() && docSnap.data().photos) {
+                    const photos = docSnap.data().photos;
+                    console.log('Deleting photos from cloud:', photos);
+
+                    // 2. Call our secure API to delete from Cloudinary
+                    await fetch('/api/delete-photos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ urls: photos })
+                    });
+                }
+
+                // 3. Delete from Firestore
+                await deleteDoc(docRef);
                 await renderEvidenceGrid();
                 console.log('Evidence deleted:', id);
             } catch (err) {
                 console.error("Delete Evidence Error:", err);
-                alert("Failed to delete evidence from cloud.");
+                alert("Failed to delete evidence or cloud photos.");
             }
         }
     };
