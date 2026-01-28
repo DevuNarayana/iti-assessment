@@ -1249,12 +1249,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.5in; 
-                        mso-header-margin: 0.5in; 
-                        mso-footer-margin: 0.5in;
+                        margin: 0.45in; 
+                        mso-header-margin: 0.45in; 
+                        mso-footer-margin: 0.45in;
                     }
                     div.Section1 { 
                         page: Section1;
+                        mso-pagination: none;
                     }
                     
                     body { 
@@ -1266,37 +1267,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 20pt;
+                        margin-bottom: 15pt;
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.5;
+                        line-height: 1.2;
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Fixed Height Table to ensure border coverage -->
-                    <table width="100%" height="10.3in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 10.3in;">
+                    <table width="100%" height="10.1in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 10.1in;">
                         <tr>
-                            <td height="10.3in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 10.3in;">
+                            <td height="10.1in" style="border: 6pt solid black; padding: 15pt; vertical-align: top; text-align: center; height: 10.1in;">
                                 
                                 <!-- Symmetrical Header -->
-                                <div class="header-content" style="margin-bottom: 20pt;">
+                                <div class="header-content">
                                     <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
                                     <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
                                     <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
                                 <!-- Photo Grid -->
-                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="10" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
                             </td>
                         </tr>
                     </table>
-                    <!-- Prevents Word from adding a trailing blank page -->
-                    <p style="font-size: 1pt; line-height: 0; margin: 0; padding: 0;">&nbsp;</p>
                 </div>
             </body>
             </html>
@@ -1331,19 +1329,19 @@ document.addEventListener('DOMContentLoaded', () => {
             rows += '<tr>';
 
             // Left Cell
-            rows += '<td align="center" style="padding: 5pt;">';
+            rows += '<td align="center" style="padding: 2pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
-            rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
-            rows += `<img src="${p1}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
+            rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
+            rows += `<img src="${p1}" width="260" height="185" style="width:2.7in; height:1.9in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
                 // Right Cell
-                rows += '<td align="center" style="padding: 5pt;">';
+                rows += '<td align="center" style="padding: 2pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
-                rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
-                rows += `<img src="${p2}" width="280" height="200" style="width:2.9in; height:2.1in; display:block;">`;
+                rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
+                rows += `<img src="${p2}" width="260" height="185" style="width:2.7in; height:1.9in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
