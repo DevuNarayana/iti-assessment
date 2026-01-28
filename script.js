@@ -1,4 +1,4 @@
-// Version 50.0 - A4 Full Fill [Force Update: 2026-01-28 15:37]
+// Version 51.0 - PDF Fragment Overhaul [Force Update: 2026-01-28 15:39]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1318,52 +1318,46 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             if (isPdf) {
-                // PDF Generation - Version 48.0 (Reverting to safer DOM method)
+                // PDF Generation - Version 51.0 (Clean Fragment Method)
                 const element = document.createElement('div');
-                element.innerHTML = htmlContent;
+                element.style.width = '8.27in';
+                element.style.background = 'white';
 
-                // Add explicit PDF styles to match Word perfectly
-                const style = document.createElement('style');
-                style.textContent = `
-                    * { color: black !important; box-sizing: border-box; }
-                    .Section1 { 
-                        width: 100%; 
-                        padding: 0.3in; 
-                        background: white !important;
-                    }
-                    .main-table { 
-                        width: 100%; 
-                        height: 11.0in; /* Stretched to fill A4 exactly */
-                        border-collapse: collapse; 
-                        table-layout: fixed;
-                        border: 6.5pt solid black;
-                    }
-                    .header-content {
-                        text-align: center;
-                        margin-bottom: 20pt;
-                        font-weight: bold;
-                        font-size: 14pt;
-                        line-height: 1.1;
-                    }
-                    img { 
-                        display: block;
-                        width: 3.33in !important;
-                        height: 2.82in !important;
-                        border: 4.5pt solid black !important;
-                        margin: 0 auto;
-                    }
+                // Construct a CLEAN HTML snippet specifically for PDF (No nested <html> tags)
+                element.innerHTML = `
+                    <div style="width: 8.27in; padding: 0.3in; background: white; color: black; font-family: Calibri, Arial, sans-serif;">
+                        <div style="width: 100%; border: 7.5pt solid black; min-height: 11.2in; padding: 15pt; box-sizing: border-box;">
+                            <div style="text-align: center; margin-bottom: 25pt; font-weight: bold; font-size: 14pt; color: black !important;">
+                                <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
+                                <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
+                            </div>
+                            <table width="100%" cellspacing="5" cellpadding="0" style="table-layout: fixed; margin: 0 auto;">
+                                ${generateGridRows(photosToUse)}
+                            </table>
+                        </div>
+                    </div>
                 `;
-                element.prepend(style);
+
+                // Force image styling for PDF
+                const imgs = element.querySelectorAll('img');
+                imgs.forEach(img => {
+                    img.style.width = '3.33in';
+                    img.style.height = '2.82in';
+                    img.style.display = 'block';
+                    img.style.margin = '0 auto';
+                    img.style.border = '4.5pt solid black';
+                });
 
                 const opt = {
                     margin: 0,
                     filename: `Evidence_Report_${batch.batchId}.pdf`,
-                    image: { type: 'jpeg', quality: 1 },
+                    image: { type: 'jpeg', quality: 1.0 },
                     html2canvas: {
                         scale: 2,
                         useCORS: true,
-                        logging: false,
-                        backgroundColor: '#ffffff'
+                        backgroundColor: '#ffffff',
+                        logging: false
                     },
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                 };
