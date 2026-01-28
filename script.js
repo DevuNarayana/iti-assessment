@@ -1,4 +1,4 @@
-// Version 40.0 - Tall Photo Size (3.33x2.82) [Force Update: 2026-01-28 15:00]
+// Version 41.0 - Final Squeeze (3.33x2.82) [Force Update: 2026-01-28 15:02]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.35in; 
-                        mso-header-margin: 0.2in; 
-                        mso-footer-margin: 0.2in;
+                        margin: 0.3in; 
+                        mso-header-margin: 0.1in; 
+                        mso-footer-margin: 0.1in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1267,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 10pt; /* Tightened to fit taller photos */
+                        margin-bottom: 5pt; /* Extremely tight header */
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.0;
@@ -1276,24 +1276,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -65pt; /* Maximum pull-up to keep 10.4in on one page */
+                        margin-bottom: -75pt; /* Stronger pull-up to kill 2nd page */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Increased to 10.4in to fit 3 rows of 2.82in photos + header -->
-                    <table class="main-table" width="100%" height="10.4in" cellspacing="0" cellpadding="0" style="height: 10.4in;">
+                    <!-- Reduced to 10.2in for safer single-page fit with large photos -->
+                    <table class="main-table" width="100%" height="10.2in" cellspacing="0" cellpadding="0" style="height: 10.2in;">
                         <tr>
-                            <td height="10.4in" style="border: 6pt solid black; padding: 10pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.4in;">
+                            <td height="10.2in" style="border: 6pt solid black; padding: 5pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.2in;">
                                 
                                 <div class="header-content">
-                                    <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                    <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
-                                    <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
+                                    <p style="margin: 0; padding: 0.5pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                    <p style="margin: 0; padding: 0.5pt;">Batch ID: ${batch.batchId}</p>
+                                    <p style="margin: 0; padding: 0.5pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="4" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="3" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
