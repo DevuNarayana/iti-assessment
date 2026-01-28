@@ -1249,37 +1249,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.6in; 
+                        margin: 0.5in; 
                         mso-header-margin: 0.5in; 
                         mso-footer-margin: 0.5in;
                     }
                     div.Section1 { 
                         page: Section1;
-                        mso-pagination: none;
                     }
                     
                     body { 
                         font-family: 'Calibri', 'Arial', sans-serif; 
-                        font-size: 11pt;
                         margin: 0;
                         padding: 0;
                     }
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 12pt;
+                        margin-bottom: 10pt;
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.1;
+                    }
+
+                    /* Ensures table doesn't trigger blank page */
+                    .main-table {
+                        border-collapse: collapse;
+                        table-layout: fixed;
+                        margin-bottom: -20pt; /* Pulls up to hide trailing paragraph */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Main Container: 9.6in high to leave safety space for Word's trailing paragraph -->
-                    <table width="100%" height="9.6in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 9.6in;">
+                    <table class="main-table" width="100%" height="9.2in" cellspacing="0" cellpadding="0" style="height: 9.2in;">
                         <tr>
-                            <td height="9.6in" style="border: 6pt solid black; padding: 12pt; vertical-align: top; text-align: center; height: 9.6in;">
+                            <td height="9.2in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.2in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 2pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1287,15 +1291,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="margin: 0; padding: 2pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="8" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="10" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
                             </td>
                         </tr>
                     </table>
-                    <!-- Ultra-compact trailing paragraph prevents 2nd page creation -->
-                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; mso-line-height-rule: exactly;">&nbsp;</p>
+                    <!-- Hidden Trailing Paragraph -->
+                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all;">&nbsp;</p>
                 </div>
             </body>
             </html>
