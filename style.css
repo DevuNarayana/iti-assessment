@@ -830,15 +830,23 @@ body {
 }
 
 .capture-btn {
-    width: 70px;
-    height: 70px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     border: 4px solid white;
     padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent !important;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.capture-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
 }
 
 .shutter-inner {
