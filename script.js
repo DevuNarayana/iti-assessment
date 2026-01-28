@@ -1249,13 +1249,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.35in; 
-                        mso-header-margin: 0.35in; 
-                        mso-footer-margin: 0.35in;
+                        margin: 0.5in; 
+                        mso-header-margin: 0.5in; 
+                        mso-footer-margin: 0.5in;
                     }
                     div.Section1 { 
                         page: Section1;
-                        mso-element:header;
                     }
                     
                     body { 
@@ -1275,10 +1274,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </style>
             </head>
             <body>
-                <div class="Section1" style="page-break-after: avoid;">
-                    <table width="100%" height="10.7in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 10.7in;">
+                <div class="Section1">
+                    <!-- Fixed Height Table to ensure border coverage -->
+                    <table width="100%" height="10.3in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 10.3in;">
                         <tr>
-                            <td height="10.7in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 10.7in;">
+                            <td height="10.3in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 10.3in;">
                                 
                                 <!-- Symmetrical Header -->
                                 <div class="header-content" style="margin-bottom: 20pt;">
@@ -1295,6 +1295,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             </td>
                         </tr>
                     </table>
+                    <!-- Prevents Word from adding a trailing blank page -->
+                    <p style="font-size: 1pt; line-height: 0; margin: 0; padding: 0;">&nbsp;</p>
                 </div>
             </body>
             </html>
