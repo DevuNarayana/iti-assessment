@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = query(collection(db, "assessments"), where("batchId", "==", selectedBatch));
             const snapshot = await getDocs(q);
             snapshot.forEach(doc => {
-                evidence.push(doc.data());
+                evidence.push({ id: doc.id, ...doc.data() });
             });
         } catch (err) {
             console.error("Error fetching evidence:", err);
@@ -1062,9 +1062,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div>
                             <span class="badge ${item.type === 'Theory' ? 'safe' : item.type === 'Practical' ? 'warning' : 'pending'}" style="margin-bottom: 0.5rem; display: inline-block;">${item.type}</span>
                         </div>
-                        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
-                            <div>${date}</div>
-                            <div>${time}</div>
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                            <button onclick="deleteEvidence('${item.id}')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; cursor: pointer; margin-bottom: 0.25rem;">Delete</button>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${date}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${time}</div>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.5rem;">
@@ -1358,6 +1359,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error("Delete Batch Error:", err);
                 alert("Failed to delete Batch from cloud.");
+            }
+        }
+    };
+
+    window.deleteEvidence = async (id) => {
+        if (confirm('Are you sure you want to delete this evidence? This action cannot be undone.')) {
+            try {
+                await deleteDoc(doc(db, "assessments", id));
+                await renderEvidenceGrid();
+                console.log('Evidence deleted:', id);
+            } catch (err) {
+                console.error("Delete Evidence Error:", err);
+                alert("Failed to delete evidence from cloud.");
             }
         }
     };
