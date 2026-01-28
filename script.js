@@ -930,6 +930,24 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(styleSheet);
 
+    // Mobile Sidebar Toggle
+    window.toggleSidebar = function (id) {
+        const sidebar = document.getElementById(id);
+        if (sidebar) {
+            sidebar.classList.toggle('mobile-active');
+        }
+    }
+
+    // Close sidebar on link click (mobile)
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            const sidebar = link.closest('.sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('mobile-active');
+            }
+        });
+    });
+
     // Initialize all tables
     renderSscTable();
     updateGlobalSscDropdown(); // Initialize dropdown

@@ -70,8 +70,11 @@
         <!-- Admin Dashboard -->
         <main id="admin-view" class="view">
             <div class="dashboard-layout">
-                <aside class="sidebar glass-panel">
-                    <div class="logo">Admin<span>Portal</span></div>
+                <aside class="sidebar glass-panel" id="admin-sidebar">
+                    <div class="sidebar-header">
+                        <div class="logo">Admin<span>Portal</span></div>
+                        <button class="close-sidebar-btn" onclick="toggleSidebar('admin-sidebar')">&times;</button>
+                    </div>
                     <nav>
                         <a href="#" class="nav-link active" data-section="ssc-section">Sector Skill Council</a>
                         <a href="#" class="nav-link" data-section="batches-section">Batches</a>
@@ -84,6 +87,12 @@
                 <section class="content">
                     <header class="glass-panel top-bar">
                         <div class="header-left">
+                            <button class="menu-toggle-btn" onclick="toggleSidebar('admin-sidebar')">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
                             <h2>Admin Dashboard</h2>
                             <div class="user-profile">Admin User</div>
                         </div>
@@ -407,8 +416,11 @@
         <!-- Assessor Dashboard -->
         <main id="assessor-view" class="view">
             <div class="dashboard-layout">
-                <aside class="sidebar glass-panel">
-                    <div class="logo">Assessor<span>Hub</span></div>
+                <aside class="sidebar glass-panel" id="assessor-sidebar">
+                    <div class="sidebar-header">
+                        <div class="logo">Assessor<span>Hub</span></div>
+                        <button class="close-sidebar-btn" onclick="toggleSidebar('assessor-sidebar')">&times;</button>
+                    </div>
                     <nav>
                         <a href="#" class="active">My Tasks</a>
                         <a href="#">History</a>
@@ -417,7 +429,15 @@
                 </aside>
                 <section class="content">
                     <header class="glass-panel top-bar">
-                        <h2>My Tasks</h2>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="menu-toggle-btn" onclick="toggleSidebar('assessor-sidebar')">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <h2>My Tasks</h2>
+                        </div>
                         <div class="user-profile">Assessor User</div>
                     </header>
                     <div id="assessor-tasks-container">
