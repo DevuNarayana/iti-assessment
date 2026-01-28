@@ -1,4 +1,4 @@
-// Version 48.0 - PDF Blank Page Fix [Force Update: 2026-01-28 15:30]
+// Version 49.0 - Word Download Bug Fix [Force Update: 2026-01-28 15:32]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-        document.getElementById('regen-word-btn').addEventListener('click', generateWordDoc);
+        document.getElementById('regen-word-btn').addEventListener('click', () => generateWordDoc(false));
         document.getElementById('regen-pdf-btn').addEventListener('click', () => generateWordDoc(true));
     }
 
