@@ -716,24 +716,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.getElementById('camera-canvas');
         const context = canvas.getContext('2d');
 
-        // Set canvas dimensions to match video but limit to max 1280
-        const MAX_WIDTH = 1280;
-        let width = video.videoWidth;
-        let height = video.videoHeight;
+        // Enforce 4:3 Aspect Ratio for capture
+        const targetRatio = 4 / 3;
+        let sourceWidth = video.videoWidth;
+        let sourceHeight = video.videoHeight;
+        let sourceX = 0;
+        let sourceY = 0;
 
-        if (width > MAX_WIDTH) {
-            height = (MAX_WIDTH / width) * height;
-            width = MAX_WIDTH;
+        // Calculate crop area to center the 4:3 frame
+        if (sourceWidth / sourceHeight > targetRatio) {
+            // Source is wider than 4:3 (e.g. landscape)
+            const newWidth = sourceHeight * targetRatio;
+            sourceX = (sourceWidth - newWidth) / 2;
+            sourceWidth = newWidth;
+        } else {
+            // Source is taller than 4:3 (e.g. portrait)
+            const newHeight = sourceWidth / targetRatio;
+            sourceY = (sourceHeight - newHeight) / 2;
+            sourceHeight = newHeight;
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        // Set canvas dimensions to 1024x768 (standard 4:3)
+        canvas.width = 1024;
+        canvas.height = 768;
 
-        // Draw video frame to canvas
-        context.drawImage(video, 0, 0, width, height);
+        // Draw cropped video frame to canvas
+        context.drawImage(
+            video,
+            sourceX, sourceY, sourceWidth, sourceHeight, // Source crop
+            0, 0, 1024, 768                             // Destination fill
+        );
 
-        // Get data URL with 0.7 quality compression
-        const photoUrl = canvas.toDataURL('image/jpeg', 0.7);
+        // Get data URL with 0.8 quality compression
+        const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
         capturedPhotos.push(photoUrl);
 
         updateGallery();
