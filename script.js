@@ -1,4 +1,4 @@
-// Version 52.0 - PDF Border & Page Fix [Force Update: 2026-01-28 15:52]
+// Version 53.0 - Photo Time Slap (Timestamp & Geotag) [Force Update: 2026-01-28 16:10]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -653,12 +653,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStream = null;
     let cameraType = '';
     let capturedPhotos = [];
+    let currentGeoLocation = null; // New Geo state
     let photoLimits = {
         'Theory': 2,
         'Practical': 2,
         'Viva': 1,
         'Group': 1
     };
+
+    // Geo Helper
+    async function requestLocation() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                currentGeoLocation = {
+                    lat: position.coords.latitude.toFixed(6),
+                    lng: position.coords.longitude.toFixed(6)
+                };
+            }, (err) => {
+                console.warn("Location error:", err);
+                currentGeoLocation = null;
+            }, { enableHighAccuracy: true });
+        }
+    }
 
     function startAssessment(type) {
         cameraType = type;
@@ -674,6 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         title.textContent = `${type} Assessment`;
         counter.textContent = `0/${photoLimits[type]}`;
 
+        requestLocation(); // Trigger GPS fetch as modal opens
         modal.classList.remove('hidden');
         initCamera();
         updateGallery();
@@ -790,6 +807,27 @@ document.addEventListener('DOMContentLoaded', () => {
             sourceX, sourceY, sourceWidth, sourceHeight, // Source crop
             0, 0, 1024, 768                             // Destination fill
         );
+
+        // Format Timestamp
+        const now = new Date();
+        const timestampStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
+
+        // Draw Overlay (Black bar at bottom)
+        const barHeight = 40;
+        context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        context.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+
+        // Add Text (Timestamp + Location)
+        context.fillStyle = 'white';
+        context.font = '20px Outfit, Calibri, Arial, sans-serif';
+        context.textAlign = 'left';
+
+        let overlayText = timestampStr;
+        if (currentGeoLocation) {
+            overlayText += ` | GPS: ${currentGeoLocation.lat}, ${currentGeoLocation.lng}`;
+        }
+
+        context.fillText(overlayText, 20, canvas.height - 12);
 
         // Get data URL with 0.8 quality compression
         const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
