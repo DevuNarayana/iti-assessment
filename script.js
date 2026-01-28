@@ -1,4 +1,4 @@
-// Version 35.0 - Low & Full Fill Push [Force Update: 2026-01-28 14:38]
+// Version 36.0 - Safe Downshift Push [Force Update: 2026-01-28 14:41]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.4in; 
-                        mso-header-margin: 0.2in; 
-                        mso-footer-margin: 0.2in;
+                        margin: 0.5in; 
+                        mso-header-margin: 0.5in; 
+                        mso-footer-margin: 0.5in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1267,25 +1267,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 5pt;
+                        margin-bottom: 25pt; /* This shifts photos DOWN from the header */
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.0;
+                        line-height: 1.1;
                     }
 
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -60pt; /* Maximum pull-up to kill 2nd page */
+                        margin-bottom: -40pt; /* Strong pull-up for 1-page guarantee */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- High top padding (100pt) to shift everything down to fill the bottom gap -->
-                    <table class="main-table" width="100%" height="10.0in" cellspacing="0" cellpadding="0" style="height: 10.0in;">
+                    <!-- Safe 9.2in height for Version 36.0 -->
+                    <table class="main-table" width="100%" height="9.2in" cellspacing="0" cellpadding="0" style="height: 9.2in;">
                         <tr>
-                            <td height="10.0in" style="border: 6pt solid black; padding: 100pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.0in;">
+                            <td height="9.2in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 9.2in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1293,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="4" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
@@ -1335,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Version 35.0 - Photos enlarged to fill gap (3.3in x 2.8in)
-            rows += '<td align="center" style="padding: 1pt;">';
+            // Version 36.0 - Balanced Size to stay on 1 page
+            rows += '<td align="center" style="padding: 2pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="320" height="270" style="width:3.3in; height:2.8in; display:block;">`;
+            rows += `<img src="${p1}" width="280" height="190" style="width:2.9in; height:2.0in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Version 35.0 - Photos enlarged to fill gap
-                rows += '<td align="center" style="padding: 1pt;">';
+                // Version 36.0 - Balanced Size
+                rows += '<td align="center" style="padding: 2pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="320" height="270" style="width:3.3in; height:2.8in; display:block;">`;
+                rows += `<img src="${p2}" width="280" height="190" style="width:2.9in; height:2.0in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
