@@ -1,4 +1,4 @@
-// Version 42.0 - Zero Tolerance (3.33x2.82) [Force Update: 2026-01-28 15:05]
+// Version 43.0 - PDF Download Integration [Force Update: 2026-01-28 15:08]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Show Ready State
+        // Show Ready State with both Word and PDF options
         wordPreviewContainer.innerHTML = `
             <div style="text-align: center;">
                 <svg width="64" height="64" fill="#2563eb" viewBox="0 0 24 24" style="margin-bottom: 1rem;">
@@ -1188,15 +1188,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 </svg>
                 <h3>Ready to Generate</h3>
                 <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Report for Batch: <strong>${selectedBatchId}</strong></p>
-                <button id="regen-word-btn" class="action-btn primary" style="background: #2563eb; padding: 0.75rem 2rem;">
-                    Download Word Document
-                </button>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <button id="regen-word-btn" class="action-btn primary" style="background: #2563eb; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0V4c0-1.1-.9-2-2-2zm-2 16H8v-2h4v2zm3-4H8v-2h7v2zm0-4H8V8h7v2z"/></svg>
+                        Download Word
+                    </button>
+                    <button id="regen-pdf-btn" class="action-btn" style="background: #e11d48; color: white; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+                        Download PDF
+                    </button>
+                </div>
             </div>
         `;
         document.getElementById('regen-word-btn').addEventListener('click', generateWordDoc);
+        document.getElementById('regen-pdf-btn').addEventListener('click', () => generateWordDoc(true));
     }
 
-    async function generateWordDoc() {
+    async function generateWordDoc(isPdf = false) {
         const selectedBatchId = wordFilterBatch.value;
         if (!selectedBatchId) return;
 
@@ -1308,6 +1316,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </body>
             </html>
             `;
+
+            if (isPdf) {
+                // PDF Generation using html2pdf.js
+                const element = document.createElement('div');
+                element.innerHTML = htmlContent;
+
+                // Set explicit styles for PDF generation to ensure it matches
+                const opt = {
+                    margin: 0,
+                    filename: `Evidence_Report_${batch.batchId}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true
+                    },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+
+                // Add necessary base styles for the hidden element
+                const style = document.createElement('style');
+                style.textContent = `
+                    .Section1 { width: 8.27in; padding: 0.3in; box-sizing: border-box; }
+                    .main-table { width: 100%; height: 9.8in; border-collapse: collapse; }
+                `;
+                element.prepend(style);
+
+                html2pdf().set(opt).from(element).save();
+                return;
+            }
 
             const blob = new Blob(['\ufeff', htmlContent], {
                 type: 'application/msword'
