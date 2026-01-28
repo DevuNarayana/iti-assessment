@@ -1,3 +1,4 @@
+// Version 28.0 - Final Layout Push [Force Update: 2026-01-28 14:15]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1249,12 +1250,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.5in; 
-                        mso-header-margin: 0.5in; 
-                        mso-footer-margin: 0.5in;
+                        margin: 0.4in; 
+                        mso-header-margin: 0.4in; 
+                        mso-footer-margin: 0.4in;
                     }
                     div.Section1 { 
                         page: Section1;
+                        mso-line-height-rule: exactly;
                     }
                     
                     body { 
@@ -1265,33 +1267,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 10pt;
+                        margin-bottom: 8pt;
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.1;
                     }
 
-                    /* Ensures table doesn't trigger blank page */
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -20pt; /* Pulls up to hide trailing paragraph */
+                        margin-bottom: -30pt; /* Pulls up to hide trailing paragraph */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <table class="main-table" width="100%" height="9.2in" cellspacing="0" cellpadding="0" style="height: 9.2in;">
+                    <!-- Increased height to 9.8in to fit larger photos -->
+                    <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in;">
                         <tr>
-                            <td height="9.2in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.2in;">
+                            <td height="9.8in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.8in;">
                                 
                                 <div class="header-content">
-                                    <p style="margin: 0; padding: 2pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                    <p style="margin: 0; padding: 2pt;">Batch ID: ${batch.batchId}</p>
-                                    <p style="margin: 0; padding: 2pt;">Job Role: ${batch.jobRole}</p>
+                                    <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                    <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
+                                    <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="10" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <!-- Tightened cell spacing to allow larger photos -->
+                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
@@ -1333,20 +1336,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Left Cell
+            // Left Cell - Increased photo size
             rows += '<td align="center" style="padding: 2pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="260" height="185" style="width:2.7in; height:1.9in; display:block;">`;
+            rows += `<img src="${p1}" width="300" height="215" style="width:3.1in; height:2.2in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Right Cell
+                // Right Cell - Increased photo size
                 rows += '<td align="center" style="padding: 2pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="260" height="185" style="width:2.7in; height:1.9in; display:block;">`;
+                rows += `<img src="${p2}" width="300" height="215" style="width:3.1in; height:2.2in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
