@@ -1276,9 +1276,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </head>
             <body>
                 <div class="Section1">
-                    <table width="100%" height="10.5in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
+                    <table width="100%" height="10.82in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
                         <tr>
-                            <td height="10.5in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center;">
+                            <td height="10.82in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center;">
                                 
                                 <!-- Symmetrical Header -->
                                 <div class="header-content" style="margin-bottom: 20pt;">
