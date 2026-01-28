@@ -679,31 +679,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initCamera() {
+        // Stop any existing stream first to avoid conflicts
+        stopCamera();
+
         try {
+            // Simplest, most compatible constraints for mobile
             const constraints = {
                 video: {
-                    facingMode: { ideal: 'environment' },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
+                    facingMode: 'environment'
+                },
+                audio: false
             };
 
+            console.log('Requesting camera access...');
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             const video = document.getElementById('camera-feed');
 
             if (video) {
-                video.muted = true; // Helps with autoplay on mobile
-                video.setAttribute('playsinline', ''); // Double ensure inline playback
                 video.srcObject = stream;
                 currentStream = stream;
 
-                // Wait for video to be ready and play
-                await video.play();
-                console.log('Camera stream active');
+                // Muted and playsinline are critical for mobile autoplay
+                video.muted = true;
+                video.setAttribute('playsinline', '');
+
+                // Use metadata event for reliable playback
+                video.onloadedmetadata = () => {
+                    video.play().catch(e => console.error("Video play failed:", e));
+                };
+
+                console.log('Camera stream initialized');
             }
         } catch (err) {
-            console.error('Camera error:', err);
-            // Fallback for devices that might fail on specific constraints
+            console.error('Primary Camera Error:', err);
+
+            // Fallback: try any video track
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('camera-feed');
@@ -711,11 +721,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     video.muted = true;
                     video.srcObject = stream;
                     currentStream = stream;
-                    await video.play();
+                    video.play();
                 }
             } catch (fallbackErr) {
-                console.error('Camera fallback error:', fallbackErr);
-                alert('Unable to access camera. Please ensure you have granted camera permissions.');
+                console.error('Full Camera Failure:', fallbackErr);
+
+                if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError') {
+                    alert('Camera access was denied. Please click the "lock" icon in the address bar and allow camera access.');
+                } else {
+                    alert('Unable to access camera. Please refresh or check if another app is using your camera.');
+                }
                 closeCamera();
             }
         }
