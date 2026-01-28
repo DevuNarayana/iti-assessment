@@ -1249,9 +1249,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.3in; 
-                        mso-header-margin: 0.3in; 
-                        mso-footer-margin: 0.3in;
+                        margin: 0.35in; 
+                        mso-header-margin: 0.35in; 
+                        mso-footer-margin: 0.35in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1275,10 +1275,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </style>
             </head>
             <body>
-                <div class="Section1">
-                    <table width="100%" height="11.0in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 11.0in;">
+                <div class="Section1" style="page-break-after: avoid;">
+                    <table width="100%" height="10.7in" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed; height: 10.7in;">
                         <tr>
-                            <td height="11.0in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 11.0in;">
+                            <td height="10.7in" style="border: 6pt solid black; padding: 20pt; vertical-align: top; text-align: center; height: 10.7in;">
                                 
                                 <!-- Symmetrical Header -->
                                 <div class="header-content" style="margin-bottom: 20pt;">
