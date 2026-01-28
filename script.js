@@ -1,4 +1,4 @@
-// Version 49.0 - Word Download Bug Fix [Force Update: 2026-01-28 15:32]
+// Version 50.0 - A4 Full Fill [Force Update: 2026-01-28 15:37]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1333,7 +1333,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     .main-table { 
                         width: 100%; 
-                        height: 10.4in; /* Safe height for PDF */
+                        height: 11.0in; /* Stretched to fill A4 exactly */
                         border-collapse: collapse; 
                         table-layout: fixed;
                         border: 6.5pt solid black;
