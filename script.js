@@ -1246,14 +1246,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>Evidence Report</title>
                 <style>
-                    /* Basic Page Setup */
+                    /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.25in; /* Reduced margin to fit photos+border */
-                        mso-header-margin: 0.25in; 
-                        mso-footer-margin: 0.25in;
+                        margin: 0.5in; 
+                        mso-header-margin: 0.5in; 
+                        mso-footer-margin: 0.5in;
                     }
-                    div.Section1 { page: Section1; }
+                    div.Section1 { 
+                        page: Section1;
+                        mso-element:header; 
+                    }
                     
                     body { 
                         font-family: 'Calibri', 'Arial', sans-serif; 
@@ -1262,60 +1265,55 @@ document.addEventListener('DOMContentLoaded', () => {
                         padding: 0;
                     }
 
-                    /* Main Container Table for 6pt Page Border */
-                    .main-container {
+                    /* Symmetrical Content Wrapper */
+                    .page-border-container {
                         width: 100%;
-                        border-collapse: collapse;
-                        border: 6pt solid black; /* The Page Border */
+                        border: 6pt solid black;
+                        padding: 24pt;
+                        min-height: 9.3in; /* Fills A4 height for bottom border symmetry */
+                        box-sizing: border-box;
                     }
                     
-                    /* Header Row Styling */
-                    .header-row td {
-                        text-align: center;
-                        padding-top: 20px;
-                        padding-bottom: 20px;
-                    }
                     .header-content {
+                        text-align: center;
+                        margin-bottom: 30pt;
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.2;
+                        line-height: 1.5;
                     }
                     
-                    /* Photo Grid Styling */
-                    .photo-row td {
+                    .photo-grid-table {
+                        width: 100%;
+                        border-collapse: separate;
+                        border-spacing: 15pt;
+                    }
+
+                    .photo-cell {
                         text-align: center;
                         vertical-align: middle;
-                        padding: 10px;
                     }
                     
-                    /* Photo Wrapper Table for 4.5pt Border */
-                    .photo-wrapper {
-                        display: inline-block;
+                    .photo-border-wrapper {
                         border: 4.5pt solid black;
+                        display: inline-block;
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- 
-                       STRATEGY: Single Outer Table Cell for Page Border.
-                       Added PADDING to separate border from content.
-                    -->
-                    <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                    <table width="100%" height="98%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; table-layout: fixed;">
                         <tr>
-                            <!-- 6pt Page Border with 15pt Internal Padding (Adjusted to fit 3.54in photos) -->
-                            <!-- Reduced height to 900 to ensure single page -->
-                            <td height="900" style="border: 6pt solid black; padding: 15pt; vertical-align: top;">
+                            <td height="100%" style="border: 6pt solid black; padding: 25pt; vertical-align: top; text-align: center;">
                                 
-                                <!-- Header -->
-                                <div class="header-content" style="text-align: center; margin-bottom: 20px;">
-                                    <p style="margin: 0; padding-bottom: 5px;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                    <p style="margin: 0; padding-bottom: 5px;">Batch ID: ${batch.batchId}</p>
-                                    <p style="margin: 0; padding-bottom: 5px;">Job Role: ${batch.jobRole}</p>
+                                <!-- Symmetrical Header -->
+                                <div class="header-content">
+                                    <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                    <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
+                                    <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <!-- Photo Grid with CellSpacing for Photo Separation -->
-                                <table width="100%" cellspacing="5" cellpadding="0" style="border: none;">
+                                <!-- Photo Grid -->
+                                <table width="100%" cellspacing="15" cellpadding="0" style="margin: 0 auto;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
@@ -1353,25 +1351,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const p1 = photos[i];
             const p2 = photos[i + 1];
 
-            rows += '<tr class="photo-row">';
+            rows += '<tr>';
 
-            // Left Cell - Reduced padding
-            rows += '<td style="padding: 2px; text-align: center;">';
-            // Inner Table: Zero padding, collapsed border, inline-block to shrink wrap
-            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; display: inline-block; margin: 0; padding: 0;"><tr><td style="padding: 0; margin: 0;">';
-            rows += `<img src="${p1}" width="340" height="243" style="width:3.54in; height:2.53in; display:block; margin: 0; padding: 0;">`;
+            // Left Cell
+            rows += '<td align="center" style="padding: 10pt;">';
+            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
+            rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
+            rows += `<img src="${p1}" width="330" height="235" style="width:3.43in; height:2.45in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Right Cell - Reduced padding
-                rows += '<td style="padding: 2px; text-align: center;">';
-                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; display: inline-block; margin: 0; padding: 0;"><tr><td style="padding: 0; margin: 0;">';
-                rows += `<img src="${p2}" width="340" height="243" style="width:3.54in; height:2.53in; display:block; margin: 0; padding: 0;">`;
+                // Right Cell
+                rows += '<td align="center" style="padding: 10pt;">';
+                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
+                rows += '<tr><td style="padding: 0; margin: 0; line-height: 0;">';
+                rows += `<img src="${p2}" width="330" height="235" style="width:3.43in; height:2.45in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
-                rows += `<td></td>`;
+                rows += '<td></td>';
             }
             rows += '</tr>';
         }
