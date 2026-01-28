@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.5in; 
-                        mso-header-margin: 0.5in; 
-                        mso-footer-margin: 0.5in;
+                        margin: 0.45in; 
+                        mso-header-margin: 0.4in; 
+                        mso-footer-margin: 0.4in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1267,24 +1267,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 8pt;
+                        margin-bottom: 5pt;
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.1;
+                        line-height: 1.0;
                     }
 
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -40pt; /* Aggressive pull-up */
+                        margin-bottom: -45pt; /* Extremely aggressive pull-up */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <table class="main-table" width="100%" height="9.4in" cellspacing="0" cellpadding="0" style="height: 9.4in;">
+                    <table class="main-table" width="100%" height="9.7in" cellspacing="0" cellpadding="0" style="height: 9.7in;">
                         <tr>
-                            <td height="9.4in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.4in;">
+                            <td height="9.7in" style="border: 6pt solid black; padding: 8pt; vertical-align: top; text-align: center; height: 9.7in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1292,14 +1292,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
                                 </div>
 
-                                <table width="100%" cellspacing="5" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                <table width="100%" cellspacing="4" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
                                     ${generateGridRows(photosToUse)}
                                 </table>
 
                             </td>
                         </tr>
                     </table>
-                    <!-- Hidden Trailing Paragraph - Extremely small -->
+                    <!-- Hidden Trailing Paragraph -->
                     <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all; height: 0; overflow: hidden;">&nbsp;</p>
                 </div>
             </body>
@@ -1334,20 +1334,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Left Cell - Balanced photo size
-            rows += '<td align="center" style="padding: 2pt;">';
+            // Ultimate Fit photo size
+            rows += '<td align="center" style="padding: 1pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="270" height="195" style="width:2.8in; height:2.0in; display:block;">`;
+            rows += `<img src="${p1}" width="290" height="210" style="width:3.0in; height:2.15in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Right Cell - Balanced photo size
-                rows += '<td align="center" style="padding: 2pt;">';
+                // Ultimate Fit photo size
+                rows += '<td align="center" style="padding: 1pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="270" height="195" style="width:2.8in; height:2.0in; display:block;">`;
+                rows += `<img src="${p2}" width="290" height="210" style="width:3.0in; height:2.15in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
