@@ -680,16 +680,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
-            });
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             const video = document.getElementById('camera-feed');
-            video.srcObject = stream;
-            currentStream = stream;
+
+            if (video) {
+                video.muted = true; // Helps with autoplay on mobile
+                video.setAttribute('playsinline', ''); // Double ensure inline playback
+                video.srcObject = stream;
+                currentStream = stream;
+
+                // Wait for video to be ready and play
+                await video.play();
+                console.log('Camera stream active');
+            }
         } catch (err) {
             console.error('Camera error:', err);
-            alert('Unable to access camera. Please ensure you have granted camera permissions.');
-            closeCamera();
+            // Fallback for devices that might fail on specific constraints
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('camera-feed');
+                if (video) {
+                    video.muted = true;
+                    video.srcObject = stream;
+                    currentStream = stream;
+                    await video.play();
+                }
+            } catch (fallbackErr) {
+                console.error('Camera fallback error:', fallbackErr);
+                alert('Unable to access camera. Please ensure you have granted camera permissions.');
+                closeCamera();
+            }
         }
     }
 
