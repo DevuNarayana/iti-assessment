@@ -1,4 +1,4 @@
-// Version 44.0 - PDF Layout Sync [Force Update: 2026-01-28 15:14]
+// Version 45.0 - PDF Visibility & Scaling Fix [Force Update: 2026-01-28 15:20]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1338,27 +1338,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Add necessary base styles for the hidden element to match Word exactly
                 const style = document.createElement('style');
                 style.textContent = `
-                    * { box-sizing: border-box; }
+                    * { 
+                        box-sizing: border-box; 
+                        color: black !important; /* Force black text for PDF */
+                    }
                     .Section1 { 
-                        width: 100%; 
-                        padding: 0; 
+                        width: 8.27in; /* Exact A4 Width */
+                        padding: 0.3in; 
                         margin: 0;
-                        background: white;
+                        background: white !important;
                     }
                     .main-table { 
                         width: 100%; 
                         height: 9.8in; 
                         border-collapse: collapse; 
                         table-layout: fixed;
+                        border: 6pt solid black;
                     }
                     .header-content {
                         text-align: center;
-                        margin-bottom: 0pt;
+                        margin-bottom: 5pt;
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.0;
+                        line-height: 1.1;
                     }
-                    img { display: block; }
+                    img { 
+                        display: block;
+                        width: 3.33in !important;
+                        height: 2.82in !important;
+                    }
                 `;
                 element.prepend(style);
 
