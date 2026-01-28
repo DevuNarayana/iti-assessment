@@ -1,4 +1,4 @@
-// Version 39.0 - Precise Photo Size (3.33x2.5) [Force Update: 2026-01-28 14:53]
+// Version 40.0 - Tall Photo Size (3.33x2.82) [Force Update: 2026-01-28 15:00]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1250,9 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     /* Page Setup - Symmetrical A4 */
                     @page Section1 {
                         size: A4;
-                        margin: 0.4in; 
-                        mso-header-margin: 0.4in; 
-                        mso-footer-margin: 0.4in;
+                        margin: 0.35in; 
+                        mso-header-margin: 0.2in; 
+                        mso-footer-margin: 0.2in;
                     }
                     div.Section1 { 
                         page: Section1;
@@ -1267,25 +1267,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     .header-content {
                         text-align: center;
-                        margin-bottom: 20pt; /* Adjusted to fit larger photos */
+                        margin-bottom: 10pt; /* Tightened to fit taller photos */
                         font-weight: bold;
                         font-size: 14pt;
-                        line-height: 1.1;
+                        line-height: 1.0;
                     }
 
                     .main-table {
                         border-collapse: collapse;
                         table-layout: fixed;
-                        margin-bottom: -55pt; /* Strong pull-up for larger photo height */
+                        margin-bottom: -65pt; /* Maximum pull-up to keep 10.4in on one page */
                     }
                 </style>
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Fixed Border height maintained at 9.6in to accommodate 7.5in photo total height -->
-                    <table class="main-table" width="100%" height="9.6in" cellspacing="0" cellpadding="0" style="height: 9.6in;">
+                    <!-- Increased to 10.4in to fit 3 rows of 2.82in photos + header -->
+                    <table class="main-table" width="100%" height="10.4in" cellspacing="0" cellpadding="0" style="height: 10.4in;">
                         <tr>
-                            <td height="9.6in" style="border: 6pt solid black; padding: 10pt; vertical-align: top; text-align: center; height: 9.6in;">
+                            <td height="10.4in" style="border: 6pt solid black; padding: 10pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.4in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1335,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Version 39.0 - EXACT dimensions: 3.33in x 2.5in
+            // Version 40.0 - EXACT dimensions: 3.33in x 2.82in
             rows += '<td align="center" style="padding: 1pt;">';
-            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4pt solid black; margin: 0 auto;">';
+            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="320" height="240" style="width:3.33in; height:2.5in; display:block;">`;
+            rows += `<img src="${p1}" width="320" height="270" style="width:3.33in; height:2.82in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Version 39.0 - EXACT dimensions: 3.33in x 2.5in
+                // Version 40.0 - EXACT dimensions: 3.33in x 2.82in
                 rows += '<td align="center" style="padding: 1pt;">';
-                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4pt solid black; margin: 0 auto;">';
+                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="320" height="240" style="width:3.33in; height:2.5in; display:block;">`;
+                rows += `<img src="${p2}" width="320" height="270" style="width:3.33in; height:2.82in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
