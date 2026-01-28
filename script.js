@@ -1282,10 +1282,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </head>
             <body>
                 <div class="Section1">
-                    <!-- Adjusted height to 10.4in and increased top padding to shift content down -->
-                    <table class="main-table" width="100%" height="10.4in" cellspacing="0" cellpadding="0" style="height: 10.4in;">
+                    <!-- Increased top padding to 60pt to shift photos lower -->
+                    <table class="main-table" width="100%" height="10.2in" cellspacing="0" cellpadding="0" style="height: 10.2in;">
                         <tr>
-                            <td height="10.4in" style="border: 6pt solid black; padding: 40pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.4in;">
+                            <td height="10.2in" style="border: 6pt solid black; padding: 60pt 5pt 5pt 5pt; vertical-align: top; text-align: center; height: 10.2in;">
                                 
                                 <div class="header-content">
                                     <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
@@ -1335,20 +1335,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             rows += '<tr>';
 
-            // Balanced photo size for Shift Down strategy
+            // Lowered height for safety in Version 34.0
             rows += '<td align="center" style="padding: 1pt;">';
             rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
             rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="320" height="250" style="width:3.3in; height:2.6in; display:block;">`;
+            rows += `<img src="${p1}" width="320" height="240" style="width:3.3in; height:2.5in; display:block;">`;
             rows += '</td></tr></table>';
             rows += '</td>';
 
             if (p2) {
-                // Balanced photo size for Shift Down strategy
+                // Lowered height for safety in Version 34.0
                 rows += '<td align="center" style="padding: 1pt;">';
                 rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
                 rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="320" height="250" style="width:3.3in; height:2.6in; display:block;">`;
+                rows += `<img src="${p2}" width="320" height="240" style="width:3.3in; height:2.5in; display:block;">`;
                 rows += '</td></tr></table>';
                 rows += '</td>';
             } else {
