@@ -1,4 +1,4 @@
-// Version 45.0 - PDF Visibility & Scaling Fix [Force Update: 2026-01-28 15:20]
+// Version 46.0 - PDF Height & Alignment Polish [Force Update: 2026-01-28 15:23]
 import {
     db, storage, collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, ref, uploadString, uploadBytes, getDownloadURL,
     CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET
@@ -1340,24 +1340,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 style.textContent = `
                     * { 
                         box-sizing: border-box; 
-                        color: black !important; /* Force black text for PDF */
+                        color: black !important;
                     }
                     .Section1 { 
-                        width: 8.27in; /* Exact A4 Width */
-                        padding: 0.3in; 
+                        width: 8.27in; 
+                        padding: 0.2in 0.3in; /* Balanced top/side padding */
                         margin: 0;
                         background: white !important;
                     }
                     .main-table { 
                         width: 100%; 
-                        height: 9.8in; 
+                        height: 10.4in; /* Stretched to fill A4 bottom */
                         border-collapse: collapse; 
                         table-layout: fixed;
-                        border: 6pt solid black;
+                        border: 6.5pt solid black;
                     }
                     .header-content {
                         text-align: center;
-                        margin-bottom: 5pt;
+                        margin-bottom: 8pt;
                         font-weight: bold;
                         font-size: 14pt;
                         line-height: 1.1;
@@ -1366,6 +1366,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         display: block;
                         width: 3.33in !important;
                         height: 2.82in !important;
+                        margin: 0 auto;
+                        border: 4.5pt solid black;
                     }
                 `;
                 element.prepend(style);
