@@ -173,4 +173,4 @@ export function initAssessorListeners() {
 }
 
 // Re-export for use in script.js
-export { backToTasks, goToOptions };
+export { backToTasks, goToOptions, showHistory };
