@@ -422,3 +422,54 @@ export function initAdminListeners() {
     }
 }
 
+// Word Generator Logic
+export function renderWordGenerator() {
+    const wordFilterSsc = document.getElementById('word-filter-ssc');
+    const wordFilterBatch = document.getElementById('word-filter-batch');
+    const generateBtn = document.getElementById('generate-word-btn');
+
+    if (wordFilterSsc && wordFilterSsc.options.length === 1) {
+        state.sscs.forEach(ssc => {
+            const opt = document.createElement('option');
+            opt.value = ssc.name;
+            opt.textContent = ssc.name;
+            wordFilterSsc.appendChild(opt);
+        });
+
+        wordFilterSsc.onchange = () => {
+            const selectedSsc = wordFilterSsc.value;
+            wordFilterBatch.innerHTML = '<option value="">Select Batch</option>';
+            wordFilterBatch.disabled = true;
+
+            if (selectedSsc) {
+                const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+                if (filteredBatches.length > 0) {
+                    wordFilterBatch.disabled = false;
+                    filteredBatches.forEach(b => {
+                        const opt = document.createElement('option');
+                        opt.value = b.batchId;
+                        opt.textContent = b.batchId;
+                        wordFilterBatch.appendChild(opt);
+                    });
+                } else {
+                    wordFilterBatch.innerHTML = '<option value="">No Batches Found</option>';
+                }
+            }
+        };
+
+        wordFilterBatch.onchange = () => {
+            if (wordFilterBatch.value) {
+                generateBtn.style.display = 'block';
+            } else {
+                generateBtn.style.display = 'none';
+            }
+        };
+
+        generateBtn.onclick = async () => {
+            const batchId = wordFilterBatch.value;
+            if (!batchId) return;
+            alert("Word generation for Batch " + batchId + " started...");
+        };
+    }
+}
+

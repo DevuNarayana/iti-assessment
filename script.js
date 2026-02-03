@@ -1,4 +1,4 @@
-// Version 60.0 - Modular Refactor
+// Version 61.0 - Modular Refactor
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
@@ -10,6 +10,7 @@ import {
     renderBatchTable,
     renderAssessorCredentials,
     renderAdminEvidence,
+    renderWordGenerator,
     initAdminListeners,
     deleteSsc,            // Exported for window
     deleteBatch,          // Exported for window
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (targetId === 'assessors-section') renderAssessorCredentials(); // Ensure this is exported/imported if used
                     if (targetId === 'ssc-section') renderSscTable();
                     if (targetId === 'evidence-section') renderAdminEvidence();
+                    if (targetId === 'word-section') renderWordGenerator();
                 }
             });
         });
