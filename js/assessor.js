@@ -1,6 +1,6 @@
 import { db, collection, query, where, getDocs } from '../firebase-config.js';
 import { state } from './state.js';
-import { openLightbox } from './camera.js';
+import { openLightbox, startAssessment } from './camera.js';
 import { showView } from './utils.js';
 
 export function renderAssessorTasks() {
@@ -164,9 +164,11 @@ export function initAssessorListeners() {
     document.querySelectorAll('#assessment-options-container .option-card').forEach(card => {
         card.removeAttribute('onclick');
         const type = card.querySelector('h3').textContent;
-        // We will need to import startAssessment from Camera module really, or trigger it via custom event or passing the function.
-        // Better: Export a method to attach this in script.js OR import startAssessment here.
-        // Since we are refactoring, we can import startAssessment from camera.js (assuming separate files)
+
+        // Attach listener
+        card.addEventListener('click', () => {
+            startAssessment(type);
+        });
     });
 }
 

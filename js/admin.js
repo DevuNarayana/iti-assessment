@@ -362,6 +362,63 @@ export async function deleteEvidence(id) {
             console.error("Delete Evidence Error:", err);
             alert("Failed to delete evidence.");
         }
+
+    }
+}
+
+// Initialization
+export function initAdminListeners() {
+    // Add SSC Form
+    const sscForm = document.getElementById('add-ssc-form');
+    if (sscForm) {
+        sscForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sscName = document.getElementById('ssc-name').value.trim();
+            const sscCode = document.getElementById('ssc-code').value.trim();
+            if (sscName && sscCode) {
+                await addDoc(collection(db, "sscs"), { name: sscName, code: sscCode, createdAt: new Date().toISOString() });
+                await syncData();
+                renderSscTable();
+                updateGlobalSscDropdown();
+                document.getElementById('add-ssc-modal').classList.add('hidden');
+                e.target.reset();
+            }
+        });
+    }
+
+    // Add Batch Form
+    const batchForm = document.getElementById('create-batch-form');
+    if (batchForm) {
+        batchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ssc = document.getElementById('global-batch-ssc').value;
+            const batchId = document.getElementById('batch-id').value.trim();
+            const jobRole = document.getElementById('job-role').value.trim();
+            const skillHub = document.getElementById('skill-hub').value.trim();
+            const dateVal = document.getElementById('batch-date').value;
+
+            if (ssc && batchId && jobRole && dateVal) {
+                const dateObj = new Date(dateVal);
+                const day = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                const month = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+                const batchData = {
+                    ssc,
+                    batchId,
+                    jobRole,
+                    skillHub,
+                    day,
+                    month,
+                    timestamp: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, "batches"), batchData);
+                await syncData();
+                renderBatchTable();
+                document.getElementById('create-batch-modal').classList.add('hidden');
+                e.target.reset();
+            }
+        });
     }
 }
 
