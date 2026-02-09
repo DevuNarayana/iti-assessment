@@ -603,22 +603,24 @@ export function renderWordGenerator() {
                                 <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
                                 <p style="font-size: 18px; font-weight: bold; color: #1e293b;">Attendance File ${idx + 1} (PDF)</p>
                                 <p style="color: #64748b; margin-bottom: 20px;">This is an uploaded document.</p>
-                                <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Original PDF</a>
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Original PDF</a>
+                                </div>
                             </div>`;
             }
-            return `<div style="${pageBreak} padding-top: 20px; text-align: center;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-                                <span style="font-weight: bold; font-size: 16px; color: #1e40af;">Attendance Sheet ${idx + 1}</span>
-                                <span style="font-size: 12px; color: #64748b;">Photo Evidence</span>
+            // Maximized Image Layout
+            return `<div style="${pageBreak} position: relative; width: 100%; height: 11.2in; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <div style="position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; z-index: 10;">
+                                <span style="font-weight: bold; color: #1e40af;">Sheet ${idx + 1}</span>
                             </div>
-                            <img src="${url}" style="max-width: 100%; max-height: 8.5in; border: 1px solid #94a3b8; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); display: block; margin: 0 auto;">
+                            <img src="${url}" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>`;
         }).join('')}
             </div>
         `;
 
         const opt = {
-            margin: 0.5,
+            margin: 0, // Zero margin for full page fit
             filename: `Attendance_${batch.batchId}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
