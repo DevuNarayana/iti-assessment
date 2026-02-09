@@ -338,7 +338,14 @@ async function submitPhotos() {
             formData.append('file', photoData);
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+            const isPdf = photoData.startsWith('data:application/pdf');
+            const resourceType = isPdf ? 'raw' : 'image';
+
+            // For RAW uploads, we might need to ensure the filename extension is preserved
+            // but for base64 uploads, Cloudinary generates a name. 
+            // We'll trust Cloudinary's raw handling.
+
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
                 method: 'POST',
                 body: formData
             });
