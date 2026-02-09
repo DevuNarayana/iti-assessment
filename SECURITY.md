@@ -68,7 +68,7 @@ service cloud.firestore {
 2.  Find the API Key used in `FIREBASE_CONFIG`.
 3.  **Edit API Key**:
     -   **Application Restrictions**: Select **HTTP Referrers (Websites)**.
-    -   Add your Vercel domain: `https://iti-assessment.vercel.app/*`
+    -   Add your Vercel domain: `https://kptech-portal.vercel.app/*`
     -   Add localhost for testing: `http://localhost:*`
 4.  **Save**.
     -   Now, even if someone steals your key, they cannot use it from their own website/server.
