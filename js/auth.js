@@ -6,7 +6,7 @@ import { requestLocation } from './camera.js';
 export function validateLogin(username, password, role) {
     console.log('Login Attempt:', { username, password, role });
 
-    const isValid = (role === 'admin') ? (username === 'admin' && password === 'admin') : false;
+    const isValid = (role === 'admin') ? (username === 'KPTECH' && password === 'KPTECH_123') : false;
     if (isValid) return true;
 
     if (role === 'assessor') {
