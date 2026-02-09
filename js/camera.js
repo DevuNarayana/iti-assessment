@@ -285,6 +285,34 @@ export function initCameraListeners() {
     });
 
     document.getElementById('submit-photos-btn')?.addEventListener('click', submitPhotos);
+
+    // Photo Upload Logic
+    const uploadBtn = document.getElementById('upload-btn');
+    const photoUpload = document.getElementById('photo-upload');
+
+    uploadBtn?.addEventListener('click', () => photoUpload.click());
+
+    photoUpload?.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        const limit = photoLimits[cameraType];
+
+        files.forEach(file => {
+            if (capturedPhotos.length >= limit) {
+                console.warn("Photo limit reached, skipping file:", file.name);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                capturedPhotos.push(event.target.result);
+                updateGallery();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Reset input for next selection
+        e.target.value = '';
+    });
 }
 
 // Separate function for submit logic

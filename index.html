@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=71.0">
+    <link rel="stylesheet" href="style.css?v=72.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
@@ -64,7 +64,7 @@
                 </form>
                 <div id="error-message" class="error-msg"></div>
                 <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-                    Version 71.0 [Cloud Sync Active]
+                    Version 72.0 [Cloud Sync Active]
                 </div>
             </div>
         </main>
@@ -516,6 +516,14 @@
             </div>
 
             <div class="camera-controls">
+                <input type="file" id="photo-upload" accept="image/*" multiple class="hidden">
+                <button id="upload-btn" class="action-btn secondary" title="Upload from Gallery">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload
+                </button>
                 <button id="close-camera-btn" class="action-btn">Cancel</button>
                 <button id="capture-btn" class="capture-btn">
                     <div class="shutter-inner"></div>
@@ -537,7 +545,7 @@
             alert("Global Error: " + e.message + "\nFile: " + e.filename + "\nLine: " + e.lineno);
         });
     </script>
-    <script type="module" src="script.js?v=71.0"></script>
+    <script type="module" src="script.js?v=72.0"></script>
 </body>
 
 </html>
