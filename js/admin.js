@@ -321,9 +321,18 @@ async function renderEvidenceGrid() {
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.5rem;">
-                ${item.photos.map(url => `
-                    <img src="${url}" class="evidence-thumb" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer;">
-                `).join('')}
+                ${item.photos.map(url => {
+        const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+        if (isPdf) {
+            return `
+                            <div class="evidence-thumb pdf-thumb" data-url="${url}" style="width: 100%; height: 120px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); color: #ef4444;">
+                                <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                <span style="font-size: 10px; margin-top: 4px; font-weight: bold;">PDF</span>
+                            </div>
+                        `;
+        }
+        return `<img src="${url}" class="evidence-thumb" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer;">`;
+    }).join('')}
             </div>
         </div>
     `).join('');
@@ -332,8 +341,14 @@ async function renderEvidenceGrid() {
     container.querySelectorAll('.delete-evidence-btn').forEach(btn => {
         btn.addEventListener('click', () => deleteEvidence(btn.dataset.id));
     });
-    container.querySelectorAll('.evidence-thumb').forEach(img => {
-        img.addEventListener('click', () => openLightbox(img.src));
+    container.querySelectorAll('.evidence-thumb').forEach(el => {
+        el.addEventListener('click', () => {
+            if (el.classList.contains('pdf-thumb')) {
+                window.open(el.dataset.url, '_blank');
+            } else {
+                openLightbox(el.src);
+            }
+        });
     });
 }
 
