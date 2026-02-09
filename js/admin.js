@@ -379,6 +379,20 @@ export async function deleteEvidence(id) {
 
 // Initialization
 export function initAdminListeners() {
+    // Global SSC Batch Filter
+    const globalBatchSscSelect = document.getElementById('global-batch-ssc');
+    if (globalBatchSscSelect) {
+        globalBatchSscSelect.addEventListener('change', () => {
+            renderBatchTable();
+            // Also enable/disable Add Batch button based on selection
+            const btn = document.getElementById('add-batch-btn');
+            if (btn) {
+                if (globalBatchSscSelect.value) btn.classList.remove('hidden');
+                else btn.classList.add('hidden');
+            }
+        });
+    }
+
     // Add SSC Form
     const sscForm = document.getElementById('add-ssc-form');
     if (sscForm) {
