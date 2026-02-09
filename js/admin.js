@@ -586,14 +586,7 @@ export function renderWordGenerator() {
         element.style.fontFamily = 'Arial, sans-serif';
 
         element.innerHTML = `
-            <h1 style="text-align: center; color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 10px;">Attendance Sheets</h1>
-            <div style="margin: 20px 0; padding: 15px; background: #f3f4f6; border-radius: 8px;">
-                <p><strong>Batch ID:</strong> ${batch.batchId}</p>
-                <p><strong>SSC:</strong> ${batch.ssc}</p>
-                <p><strong>Job Role:</strong> ${batch.jobRole}</p>
-                <p><strong>Skill Hub:</strong> ${batch.skillHub}</p>
-            </div>
-            <div id="attendance-content">
+            <div id="attendance-content" style="width: 100%; height: 100%;">
                 ${attendanceItems.map((url, idx) => {
             const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
             const pageBreak = idx > 0 ? 'page-break-before: always;' : '';
@@ -608,12 +601,9 @@ export function renderWordGenerator() {
                                 </div>
                             </div>`;
             }
-            // Maximized Image Layout
+            // Maximized Image Layout - Clean, no badges, just image
             return `<div style="${pageBreak} position: relative; width: 100%; height: 11.2in; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <div style="position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; z-index: 10;">
-                                <span style="font-weight: bold; color: #1e40af;">Sheet ${idx + 1}</span>
-                            </div>
-                            <img src="${url}" style="width: 100%; height: 100%; object-fit: contain;">
+                            <img src="${url}" style="width: 100%; height: 100%; object-fit: fill;">
                         </div>`;
         }).join('')}
             </div>
