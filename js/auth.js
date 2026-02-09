@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { showView, showError } from './utils.js';
 import { renderAssessorTasks } from './assessor.js';
+import { requestLocation } from './camera.js';
 
 export function validateLogin(username, password, role) {
     console.log('Login Attempt:', { username, password, role });
