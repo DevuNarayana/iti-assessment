@@ -237,39 +237,47 @@ export function initCameraListeners() {
         const timestampStr = `${dateStr}, ${timeStr}`;
 
         const hasAddress = currentAddress !== null;
-        const overlayHeight = hasAddress ? 130 : 70;
 
-        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        context.fillRect(0, canvas.height - overlayHeight - 30, 500, overlayHeight); // Box with 0 left margin for a "bar" look
+        // Remove background box - User requested no background
+        context.shadowColor = 'black';
+        context.shadowBlur = 4;
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY = 2;
 
         context.fillStyle = 'white';
         context.font = '700 28px "Outfit", sans-serif';
-        context.textAlign = 'left';
+        context.textAlign = 'right';
 
-        let startY = canvas.height - overlayHeight + 5;
+        let startY = canvas.height - (hasAddress ? 100 : 40);
+        const rightMargin = canvas.width - 40;
 
         // Line 1: Date & Time
-        context.fillText(timestampStr, 25, startY);
+        context.fillText(timestampStr, rightMargin, startY);
 
         if (hasAddress) {
             // Line 2: Town
             startY += 40;
             context.font = '500 24px "Outfit", sans-serif';
-            context.fillText(currentAddress.town, 25, startY);
+            context.fillText(currentAddress.town, rightMargin, startY);
 
             // Line 3: State
             startY += 35;
-            context.fillText(currentAddress.state, 25, startY);
+            context.fillText(currentAddress.state, rightMargin, startY);
         } else {
             // Pending State or Lat/Lng Fallback
             startY += 40;
             context.font = 'italic 20px "Outfit", sans-serif';
             if (isGeocoding) {
-                context.fillText("Resolving address...", 25, startY);
+                context.fillText("Resolving address...", rightMargin, startY);
             } else if (currentGeoLocation) {
-                context.fillText(`${currentGeoLocation.lat}, ${currentGeoLocation.lng}`, 25, startY);
+                context.fillText(`${currentGeoLocation.lat}, ${currentGeoLocation.lng}`, rightMargin, startY);
             }
         }
+
+        // Reset shadow for future draws
+        context.shadowBlur = 0;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
 
         const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
         capturedPhotos.push(photoUrl);
