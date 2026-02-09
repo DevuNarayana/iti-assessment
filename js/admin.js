@@ -555,14 +555,25 @@ export function renderWordGenerator() {
             if (isPdf) {
                 console.log('Single PDF detected, downloading directly...');
 
-                // Create invisible link to force download/open
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank';
-                link.download = `Attendance_${batch.batchId}.pdf`; // Try to suggest filename
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                try {
+                    // Fetch as blob to force download with correct name
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = `Attendance_${batch.batchId}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Clean up
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
+                } catch (e) {
+                    console.error("Download failed, fallback to direct link", e);
+                    window.open(url, '_blank');
+                }
                 return;
             }
         }
