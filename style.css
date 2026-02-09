@@ -962,3 +962,58 @@ select option {
     /* White text */
     padding: 10px;
 }
+
+/* GPS Indicator & Address Overlay */
+.gps-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    z-index: 10;
+    border: 1px solid var(--glass-border);
+}
+
+.gps-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.gps-badge.searching .gps-dot {
+    background: #f59e0b;
+    animation: pulse 1.5s infinite;
+}
+
+.gps-badge.fixed .gps-dot {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.address-preview {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: white;
+    z-index: 10;
+    border: 1px solid var(--glass-border);
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}

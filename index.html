@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=64.0">
+    <link rel="stylesheet" href="style.css?v=65.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
@@ -64,7 +64,7 @@
                 </form>
                 <div id="error-message" class="error-msg"></div>
                 <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-                    Version 64.0 [Cloud Sync Active]
+                    Version 65.0 [Cloud Sync Active]
                 </div>
             </div>
         </main>
@@ -498,6 +498,17 @@
             <div class="camera-viewport">
                 <video id="camera-feed" autoplay playsinline muted></video>
                 <canvas id="camera-canvas" class="hidden"></canvas>
+
+                <!-- GPS Indicator Overlay -->
+                <div id="gps-indicator" class="gps-badge searching">
+                    <span class="gps-dot"></span>
+                    <span id="gps-status-text">Searching GPS...</span>
+                </div>
+
+                <!-- Address Preview Overlay -->
+                <div id="address-overlay" class="address-preview hidden">
+                    <div id="live-address">Detecting location...</div>
+                </div>
             </div>
 
             <div class="camera-gallery" id="camera-gallery">
@@ -526,7 +537,7 @@
             alert("Global Error: " + e.message + "\nFile: " + e.filename + "\nLine: " + e.lineno);
         });
     </script>
-    <script type="module" src="script.js?v=64.0"></script>
+    <script type="module" src="script.js?v=65.0"></script>
 </body>
 
 </html>

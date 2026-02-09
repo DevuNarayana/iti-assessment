@@ -7,6 +7,8 @@ let currentStream = null;
 let cameraType = '';
 let capturedPhotos = [];
 let currentGeoLocation = null;
+let currentAddress = null;
+let watchId = null;
 let photoLimits = {
     'Theory': 2,
     'Practical': 2,
@@ -17,15 +19,57 @@ let photoLimits = {
 // Geo Helper
 export function requestLocation() {
     if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition((position) => {
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+
+        watchId = navigator.geolocation.watchPosition((position) => {
             currentGeoLocation = {
                 lat: position.coords.latitude.toFixed(6),
                 lng: position.coords.longitude.toFixed(6)
             };
+            updateGpsUI(true);
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
         }, (err) => {
             console.warn("Location error:", err);
-            currentGeoLocation = null;
-        }, { enableHighAccuracy: true });
+            updateGpsUI(false);
+        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+    }
+}
+
+async function reverseGeocode(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+        const data = await response.json();
+
+        if (data.address) {
+            const town = data.address.suburb || data.address.town || data.address.village || data.address.city || 'Unknown Town';
+            const state = data.address.state || 'Unknown State';
+            currentAddress = { town, state };
+
+            const addrOverlay = document.getElementById('address-overlay');
+            const liveAddr = document.getElementById('live-address');
+            if (addrOverlay && liveAddr) {
+                liveAddr.textContent = `${town}, ${state}`;
+                addrOverlay.classList.remove('hidden');
+            }
+        }
+    } catch (err) {
+        console.error("Reverse geocoding error:", err);
+    }
+}
+
+function updateGpsUI(isFixed) {
+    const badge = document.getElementById('gps-indicator');
+    const statusText = document.getElementById('gps-status-text');
+    if (badge && statusText) {
+        if (isFixed) {
+            badge.classList.remove('searching');
+            badge.classList.add('fixed');
+            statusText.textContent = 'GPS Fixed';
+        } else {
+            badge.classList.add('searching');
+            badge.classList.remove('fixed');
+            statusText.textContent = 'Searching GPS...';
+        }
     }
 }
 
@@ -97,12 +141,27 @@ export function stopCamera() {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
     }
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
 }
 
 export function closeCamera() {
     stopCamera();
     const modal = document.getElementById('camera-modal');
     if (modal) modal.classList.add('hidden');
+
+    // Hide GPS/Address overlays
+    const badge = document.getElementById('gps-indicator');
+    const addrOverlay = document.getElementById('address-overlay');
+    if (badge) {
+        badge.classList.add('searching');
+        badge.classList.remove('fixed');
+        const statusText = document.getElementById('gps-status-text');
+        if (statusText) statusText.textContent = 'Searching GPS...';
+    }
+    if (addrOverlay) addrOverlay.classList.add('hidden');
 }
 
 export function initCameraListeners() {
@@ -137,23 +196,39 @@ export function initCameraListeners() {
 
         context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 1024, 768);
 
-        // Metadata Overlay
+        // Metadata Overlay - Multi-line style
         const now = new Date();
-        const timestampStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
+        const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const timestampStr = now.toLocaleDateString('en-US', options).replace(',', '');
 
-        const barHeight = 40;
-        context.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        context.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+        context.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        const overlayHeight = currentAddress ? 120 : 60;
+        context.fillRect(20, canvas.height - overlayHeight - 20, 400, overlayHeight); // Bottom-left box
 
         context.fillStyle = 'white';
-        context.font = '20px Outfit, Calibri, Arial, sans-serif';
+        context.font = '700 24px "Outfit", sans-serif';
         context.textAlign = 'left';
 
-        let overlayText = timestampStr;
-        if (currentGeoLocation) {
-            overlayText += ` | GPS: ${currentGeoLocation.lat}, ${currentGeoLocation.lng}`;
+        let startY = canvas.height - overlayHeight + 10;
+
+        // Line 1: Date & Time
+        context.fillText(timestampStr, 40, startY);
+
+        if (currentAddress) {
+            // Line 2: Town
+            startY += 35;
+            context.font = '500 22px "Outfit", sans-serif';
+            context.fillText(currentAddress.town, 40, startY);
+
+            // Line 3: State
+            startY += 30;
+            context.fillText(currentAddress.state, 40, startY);
+        } else if (currentGeoLocation) {
+            // Fallback to coordinates
+            startY += 35;
+            context.font = '500 20px "Outfit", sans-serif';
+            context.fillText(`Lat: ${currentGeoLocation.lat} Lng: ${currentGeoLocation.lng}`, 40, startY);
         }
-        context.fillText(overlayText, 20, canvas.height - 12);
 
         const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
         capturedPhotos.push(photoUrl);
@@ -207,7 +282,8 @@ async function submitPhotos() {
             type: cameraType,
             photos: uploadedUrls,
             timestamp: new Date().toISOString(),
-            username: state.loggedInUser?.username || 'unknown'
+            username: state.loggedInUser?.username || 'unknown',
+            location: currentGeoLocation ? { ...currentGeoLocation, address: currentAddress } : null
         };
 
         await addDoc(collection(db, "assessments"), assessmentData);
