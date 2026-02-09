@@ -550,16 +550,23 @@ export function renderWordGenerator() {
             <div id="attendance-content">
                 ${attendanceItems.map((url, idx) => {
             const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+            const pageBreak = idx > 0 ? 'page-break-before: always;' : '';
+
             if (isPdf) {
-                return `<div style="padding: 20px; border: 1px dashed #ccc; margin-bottom: 20px; text-align: center;">
-                            <p><strong>File ${idx + 1}:</strong> PDF Document Attached</p>
-                            <a href="${url}" target="_blank" style="color: #2563eb;">View Original PDF</a>
-                        </div>`;
+                return `<div style="${pageBreak} padding: 40px; border: 2px dashed #cbd5e1; margin-top: 20px; text-align: center; border-radius: 12px; background: #f8fafc;">
+                                <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+                                <p style="font-size: 18px; font-weight: bold; color: #1e293b;">Attendance File ${idx + 1} (PDF)</p>
+                                <p style="color: #64748b; margin-bottom: 20px;">This is an uploaded document.</p>
+                                <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Original PDF</a>
+                            </div>`;
             }
-            return `<div style="margin-bottom: 30px; text-align: center; page-break-inside: avoid;">
-                        <p style="text-align: left; font-weight: bold; font-size: 14px;">Sheet ${idx + 1}:</p>
-                        <img src="${url}" style="max-width: 100%; border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    </div>`;
+            return `<div style="${pageBreak} padding-top: 20px; text-align: center;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                                <span style="font-weight: bold; font-size: 16px; color: #1e40af;">Attendance Sheet ${idx + 1}</span>
+                                <span style="font-size: 12px; color: #64748b;">Photo Evidence</span>
+                            </div>
+                            <img src="${url}" style="max-width: 100%; max-height: 8.5in; border: 1px solid #94a3b8; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); display: block; margin: 0 auto;">
+                        </div>`;
         }).join('')}
             </div>
         `;
