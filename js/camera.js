@@ -386,8 +386,12 @@ function updateGallery() {
 
     if (counter) counter.textContent = `${capturedPhotos.length}/${limit}`;
 
-    if (capturedPhotos.length >= limit) {
-        if (captureBtn) captureBtn.disabled = true;
+    const canSubmit = cameraType === 'Attendance'
+        ? capturedPhotos.length > 0
+        : capturedPhotos.length >= limit;
+
+    if (canSubmit) {
+        if (captureBtn) captureBtn.disabled = capturedPhotos.length >= limit;
         if (submitBtn) submitBtn.disabled = false;
     } else {
         if (captureBtn) captureBtn.disabled = false;
