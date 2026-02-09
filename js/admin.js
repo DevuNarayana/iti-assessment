@@ -497,15 +497,24 @@ export function renderWordGenerator() {
         const batch = state.batches.find(b => b.batchId === selectedBatchId);
         if (!batch) { alert('Batch data not found.'); return; }
 
-        // Fetch Evidence Photos from Firestore
-        const evidencePhotos = [];
+        // Fetch and Group Evidence Photos from Firestore
+        const photoGroups = {
+            'Theory': [],
+            'Practical': [],
+            'Viva': [],
+            'Group': []
+        };
+
         try {
             const q = query(collection(db, "assessments"), where("batchId", "==", selectedBatchId));
             const snapshot = await getDocs(q);
             snapshot.forEach(doc => {
                 const data = doc.data();
                 if (data.photos && Array.isArray(data.photos)) {
-                    evidencePhotos.push(...data.photos);
+                    const type = data.type || 'Unknown';
+                    if (photoGroups[type]) {
+                        photoGroups[type].push(...data.photos);
+                    }
                 }
             });
         } catch (err) {
@@ -514,13 +523,21 @@ export function renderWordGenerator() {
             return;
         }
 
-        if (evidencePhotos.length === 0) {
+        // Combine photos in mandated order: Theory -> Practical -> Viva -> Group
+        const orderedPhotos = [
+            ...photoGroups['Theory'],
+            ...photoGroups['Practical'],
+            ...photoGroups['Viva'],
+            ...photoGroups['Group']
+        ];
+
+        if (orderedPhotos.length === 0) {
             alert('No photos found for this batch!');
             return;
         }
 
-        // Limit to 6 photos for the grid (or take first 6)
-        const photosToUse = evidencePhotos.slice(0, 6);
+        // Limit to 6 photos for the single-page layout
+        const photosToUse = orderedPhotos.slice(0, 6);
 
         // Generate HTML for Word
         // MSO Header/Footer Implementation
