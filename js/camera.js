@@ -9,6 +9,8 @@ let capturedPhotos = [];
 let currentGeoLocation = null;
 let currentAddress = null;
 let watchId = null;
+let lastGeocodeTime = 0;
+let isGeocoding = false;
 let photoLimits = {
     'Theory': 2,
     'Practical': 2,
@@ -27,7 +29,12 @@ export function requestLocation() {
                 lng: position.coords.longitude.toFixed(6)
             };
             updateGpsUI(true);
-            reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            // Debounce geocoding - max once every 3 seconds
+            const now = Date.now();
+            if (!isGeocoding && now - lastGeocodeTime > 3000) {
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+            }
         }, (err) => {
             console.warn("Location error:", err);
             updateGpsUI(false);
@@ -36,17 +43,24 @@ export function requestLocation() {
 }
 
 async function reverseGeocode(lat, lng) {
+    isGeocoding = true;
+    lastGeocodeTime = Date.now();
+
+    const liveAddr = document.getElementById('live-address');
+    if (liveAddr && !currentAddress) liveAddr.textContent = "Resolving address...";
+
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
         const data = await response.json();
 
         if (data.address) {
-            const town = data.address.suburb || data.address.town || data.address.village || data.address.city || 'Unknown Town';
-            const state = data.address.state || 'Unknown State';
+            const addr = data.address;
+            // Enhanced fallback logic for Indian addresses
+            const town = addr.city_district || addr.suburb || addr.neighbourhood || addr.town || addr.village || addr.city || addr.county || 'Unknown Town';
+            const state = addr.state || addr.region || 'Unknown State';
             currentAddress = { town, state };
 
             const addrOverlay = document.getElementById('address-overlay');
-            const liveAddr = document.getElementById('live-address');
             if (addrOverlay && liveAddr) {
                 liveAddr.textContent = `${town}, ${state}`;
                 addrOverlay.classList.remove('hidden');
@@ -54,6 +68,8 @@ async function reverseGeocode(lat, lng) {
         }
     } catch (err) {
         console.error("Reverse geocoding error:", err);
+    } finally {
+        isGeocoding = false;
     }
 }
 
@@ -198,36 +214,43 @@ export function initCameraListeners() {
 
         // Metadata Overlay - Multi-line style
         const now = new Date();
-        const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-        const timestampStr = now.toLocaleDateString('en-US', options).replace(',', '');
+        const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        const timestampStr = `${dateStr}, ${timeStr}`;
 
-        context.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        const overlayHeight = currentAddress ? 120 : 60;
-        context.fillRect(20, canvas.height - overlayHeight - 20, 400, overlayHeight); // Bottom-left box
+        const hasAddress = currentAddress !== null;
+        const overlayHeight = hasAddress ? 130 : 70;
+
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, canvas.height - overlayHeight - 30, 500, overlayHeight); // Box with 0 left margin for a "bar" look
 
         context.fillStyle = 'white';
-        context.font = '700 24px "Outfit", sans-serif';
+        context.font = '700 28px "Outfit", sans-serif';
         context.textAlign = 'left';
 
-        let startY = canvas.height - overlayHeight + 10;
+        let startY = canvas.height - overlayHeight + 5;
 
         // Line 1: Date & Time
-        context.fillText(timestampStr, 40, startY);
+        context.fillText(timestampStr, 25, startY);
 
-        if (currentAddress) {
+        if (hasAddress) {
             // Line 2: Town
-            startY += 35;
-            context.font = '500 22px "Outfit", sans-serif';
-            context.fillText(currentAddress.town, 40, startY);
+            startY += 40;
+            context.font = '500 24px "Outfit", sans-serif';
+            context.fillText(currentAddress.town, 25, startY);
 
             // Line 3: State
-            startY += 30;
-            context.fillText(currentAddress.state, 40, startY);
-        } else if (currentGeoLocation) {
-            // Fallback to coordinates
             startY += 35;
-            context.font = '500 20px "Outfit", sans-serif';
-            context.fillText(`Lat: ${currentGeoLocation.lat} Lng: ${currentGeoLocation.lng}`, 40, startY);
+            context.fillText(currentAddress.state, 25, startY);
+        } else {
+            // Pending State or Lat/Lng Fallback
+            startY += 40;
+            context.font = 'italic 20px "Outfit", sans-serif';
+            if (isGeocoding) {
+                context.fillText("Resolving address...", 25, startY);
+            } else if (currentGeoLocation) {
+                context.fillText(`${currentGeoLocation.lat}, ${currentGeoLocation.lng}`, 25, startY);
+            }
         }
 
         const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
