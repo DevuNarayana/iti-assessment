@@ -487,7 +487,88 @@ export function renderWordGenerator() {
              `;
             document.getElementById('regen-word-btn').addEventListener('click', () => generateWordDoc(false));
             document.getElementById('regen-pdf-btn').addEventListener('click', () => generateWordDoc(true));
+
+            // Attendance Download Hook
+            const attendanceBtn = document.getElementById('download-attendance-btn');
+            if (attendanceBtn) {
+                attendanceBtn.style.display = 'block';
+                attendanceBtn.onclick = () => generateAttendanceReport();
+            }
         };
+    }
+
+    async function generateAttendanceReport() {
+        const selectedBatchId = document.getElementById('word-filter-batch').value;
+        if (!selectedBatchId) return;
+
+        const batch = state.batches.find(b => b.batchId === selectedBatchId);
+        if (!batch) return;
+
+        console.log('Generating Attendance Report...');
+        const attendanceItems = [];
+
+        try {
+            const q = query(collection(db, "assessments"),
+                where("batchId", "==", selectedBatchId),
+                where("type", "==", "Attendance")
+            );
+            const snapshot = await getDocs(q);
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.photos) attendanceItems.push(...data.photos);
+            });
+        } catch (err) {
+            console.error("Error fetching attendance:", err);
+            alert("Error fetching attendance data.");
+            return;
+        }
+
+        if (attendanceItems.length === 0) {
+            alert('No attendance records found for this batch!');
+            return;
+        }
+
+        // Create PDF logic for attendance
+        const element = document.createElement('div');
+        element.style.padding = '40px';
+        element.style.background = 'white';
+        element.style.color = 'black';
+        element.style.fontFamily = 'Arial, sans-serif';
+
+        element.innerHTML = `
+            <h1 style="text-align: center; color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 10px;">Attendance Sheets</h1>
+            <div style="margin: 20px 0; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                <p><strong>Batch ID:</strong> ${batch.batchId}</p>
+                <p><strong>SSC:</strong> ${batch.ssc}</p>
+                <p><strong>Job Role:</strong> ${batch.jobRole}</p>
+                <p><strong>Skill Hub:</strong> ${batch.skillHub}</p>
+            </div>
+            <div id="attendance-content">
+                ${attendanceItems.map((url, idx) => {
+            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+            if (isPdf) {
+                return `<div style="padding: 20px; border: 1px dashed #ccc; margin-bottom: 20px; text-align: center;">
+                            <p><strong>File ${idx + 1}:</strong> PDF Document Attached</p>
+                            <a href="${url}" target="_blank" style="color: #2563eb;">View Original PDF</a>
+                        </div>`;
+            }
+            return `<div style="margin-bottom: 30px; text-align: center; page-break-inside: avoid;">
+                        <p style="text-align: left; font-weight: bold; font-size: 14px;">Sheet ${idx + 1}:</p>
+                        <img src="${url}" style="max-width: 100%; border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    </div>`;
+        }).join('')}
+            </div>
+        `;
+
+        const opt = {
+            margin: 0.5,
+            filename: `Attendance_${batch.batchId}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
     }
 
     async function generateWordDoc(isPdf = false) {

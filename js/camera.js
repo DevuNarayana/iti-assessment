@@ -15,7 +15,8 @@ let photoLimits = {
     'Theory': 2,
     'Practical': 2,
     'Viva': 1,
-    'Group': 1
+    'Group': 1,
+    'Attendance': 10
 };
 
 // Geo Helper
@@ -394,13 +395,25 @@ function updateGallery() {
     }
 
     if (gallery) {
-        gallery.innerHTML = capturedPhotos.map((photo, index) => `
-            <div class="gallery-item" style="position: relative;">
-                <img src="${photo}" class="gallery-thumb">
-                <button data-index="${index}" class="delete-photo-btn"
-                    style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer;">×</button>
-            </div>
-        `).join('');
+        gallery.innerHTML = capturedPhotos.map((photo, index) => {
+            const isPdf = photo.startsWith('data:application/pdf');
+            const content = isPdf ? `
+                <div class="pdf-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fee2e2; color: #dc2626; border-radius: 8px;">
+                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span style="font-size: 10px; font-weight: bold; margin-top: 4px;">PDF</span>
+                </div>
+            ` : `<img src="${photo}" class="gallery-thumb">`;
+
+            return `
+                <div class="gallery-item" style="position: relative; width: 80px; height: 80px;">
+                    ${content}
+                    <button data-index="${index}" class="delete-photo-btn"
+                        style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; z-index: 10;">×</button>
+                </div>
+            `;
+        }).join('');
 
         // Re-attach listeners for dynamic delete buttons
         document.querySelectorAll('.delete-photo-btn').forEach(btn => {
