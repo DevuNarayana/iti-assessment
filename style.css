@@ -1013,7 +1013,32 @@ select option {
 }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Force high contrast for dropdown options */
+select option {
+    background-color: white !important;
+    color: black !important;
+}
+
+/* Ensure select inputs themselves have readable text */
+select {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+select:focus {
+    background-color: rgba(0, 0, 0, 0.9);
+    border-color: var(--primary-color);
 }
