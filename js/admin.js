@@ -551,7 +551,7 @@ export function renderWordGenerator() {
         // instead of wrapping it in a generated PDF report.
         if (attendanceItems.length === 1) {
             const url = attendanceItems[0];
-            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
             if (isPdf) {
                 console.log('Single PDF detected, downloading directly...');
 
@@ -584,7 +584,7 @@ export function renderWordGenerator() {
             </div>
             <div id="attendance-content">
                 ${attendanceItems.map((url, idx) => {
-            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
             const pageBreak = idx > 0 ? 'page-break-before: always;' : '';
 
             if (isPdf) {
