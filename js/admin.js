@@ -532,6 +532,26 @@ export function renderWordGenerator() {
             return;
         }
 
+        // OPTIMIZATION: If there is exactly one PDF file, download it directly
+        // instead of wrapping it in a generated PDF report.
+        if (attendanceItems.length === 1) {
+            const url = attendanceItems[0];
+            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf');
+            if (isPdf) {
+                console.log('Single PDF detected, downloading directly...');
+
+                // Create invisible link to force download/open
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.download = `Attendance_${batch.batchId}.pdf`; // Try to suggest filename
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            }
+        }
+
         // Create PDF logic for attendance
         const element = document.createElement('div');
         element.style.padding = '40px';
