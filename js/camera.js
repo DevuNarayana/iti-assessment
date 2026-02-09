@@ -338,7 +338,7 @@ async function submitPhotos() {
             formData.append('file', photoData);
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
                 method: 'POST',
                 body: formData
             });
