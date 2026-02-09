@@ -45,6 +45,8 @@ export function loginSuccess(role) {
         } else {
             showView(assessorView);
             renderAssessorTasks();
+            // Trigger GPS early so it's ready for photos
+            requestLocation();
         }
     }, 300);
 }

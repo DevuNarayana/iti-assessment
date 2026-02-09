@@ -21,7 +21,13 @@ let photoLimits = {
 // Geo Helper
 export function requestLocation() {
     if ("geolocation" in navigator) {
-        if (watchId) navigator.geolocation.clearWatch(watchId);
+        // If already watching, don't restart (idempotent)
+        if (watchId) {
+            console.log("Location tracking already active.");
+            // Force a UI update in case the modal just opened
+            if (currentGeoLocation) updateGpsUI(true);
+            return;
+        }
 
         watchId = navigator.geolocation.watchPosition((position) => {
             currentGeoLocation = {
@@ -103,7 +109,19 @@ export function openCameraModal(type) {
     if (title) title.textContent = `${type} Assessment`;
     if (counter) counter.textContent = `0/${photoLimits[type]}`;
 
+    // Start or verify location request
     requestLocation();
+
+    // Immediately show existing address if we have it
+    if (currentAddress) {
+        const addrOverlay = document.getElementById('address-overlay');
+        const liveAddr = document.getElementById('live-address');
+        if (addrOverlay && liveAddr) {
+            liveAddr.textContent = `${currentAddress.town}, ${currentAddress.state}`;
+            addrOverlay.classList.remove('hidden');
+        }
+    }
+
     if (modal) modal.classList.remove('hidden');
     initCamera();
     updateGallery();
