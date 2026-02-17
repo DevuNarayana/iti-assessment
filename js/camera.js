@@ -231,56 +231,49 @@ export function initCameraListeners() {
 
         context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 1024, 768);
 
-        // Metadata Overlay - Multi-line style (Skip for Attendance)
-        if (cameraType !== 'Attendance') {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            const timestampStr = `${dateStr}, ${timeStr}`;
+        // Metadata Overlay - Jio Tag Style
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
-            const hasAddress = currentAddress !== null;
+        const hasAddress = currentAddress !== null;
+        const rightMargin = canvas.width - 30;
+        let startY = canvas.height - (hasAddress ? 125 : 75);
 
-            // Remove background box - User requested no background
-            context.shadowColor = 'black';
-            context.shadowBlur = 4;
-            context.shadowOffsetX = 2;
-            context.shadowOffsetY = 2;
+        // 1. Background Box (Dark Semi-transparent)
+        const boxWidth = 500;
+        const boxHeight = hasAddress ? 115 : 65;
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(canvas.width - boxWidth - 10, canvas.height - boxHeight - 10, boxWidth, boxHeight);
 
-            context.fillStyle = 'white';
-            context.font = '700 28px "Outfit", sans-serif';
-            context.textAlign = 'right';
+        // 2. Text Setup
+        context.fillStyle = 'white';
+        context.textAlign = 'right';
+        context.shadowColor = 'rgba(0,0,0,0.5)';
+        context.shadowBlur = 2;
 
-            let startY = canvas.height - (hasAddress ? 100 : 40);
-            const rightMargin = canvas.width - 40;
+        // Line 1: Date & Time (Top Line, Bold)
+        context.font = '700 28px "Outfit", sans-serif';
+        context.fillText(`${dateStr}, ${timeStr}`, rightMargin, startY);
 
-            // Line 1: Date & Time
-            context.fillText(timestampStr, rightMargin, startY);
+        if (hasAddress) {
+            // Line 2: Town/District/Area (Detailed)
+            startY += 35;
+            context.font = '500 22px "Outfit", sans-serif';
+            context.fillText(currentAddress.town, rightMargin, startY);
 
-            if (hasAddress) {
-                // Line 2: Town
-                startY += 40;
-                context.font = '500 24px "Outfit", sans-serif';
-                context.fillText(currentAddress.town, rightMargin, startY);
-
-                // Line 3: State
-                startY += 35;
-                context.fillText(currentAddress.state, rightMargin, startY);
-            } else {
-                // Pending State or Lat/Lng Fallback
-                startY += 40;
-                context.font = 'italic 20px "Outfit", sans-serif';
-                if (isGeocoding) {
-                    context.fillText("Resolving address...", rightMargin, startY);
-                } else if (currentGeoLocation) {
-                    context.fillText(`${currentGeoLocation.lat}, ${currentGeoLocation.lng}`, rightMargin, startY);
-                }
-            }
-
-            // Reset shadow for future draws
-            context.shadowBlur = 0;
-            context.shadowOffsetX = 0;
-            context.shadowOffsetY = 0;
+            // Line 3: State
+            startY += 30;
+            context.fillText(currentAddress.state, rightMargin, startY);
+        } else if (currentGeoLocation) {
+            // Fallback: Geolocation
+            startY += 35;
+            context.font = 'italic 20px "Outfit", sans-serif';
+            context.fillText(`${currentGeoLocation.lat}, ${currentGeoLocation.lng}`, rightMargin, startY);
         }
+
+        // Reset context
+        context.shadowBlur = 0;
 
         const photoUrl = canvas.toDataURL('image/jpeg', 0.8);
         capturedPhotos.push(photoUrl);

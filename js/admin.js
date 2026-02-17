@@ -393,6 +393,21 @@ export function initAdminListeners() {
         });
     }
 
+    // Modal Show/Hide Listeners
+    document.getElementById('add-ssc-btn')?.addEventListener('click', () => {
+        document.getElementById('add-ssc-modal').classList.remove('hidden');
+    });
+    document.getElementById('cancel-ssc-btn')?.addEventListener('click', () => {
+        document.getElementById('add-ssc-modal').classList.add('hidden');
+    });
+
+    document.getElementById('add-batch-btn')?.addEventListener('click', () => {
+        document.getElementById('add-batch-modal').classList.remove('hidden');
+    });
+    document.getElementById('cancel-batch-btn')?.addEventListener('click', () => {
+        document.getElementById('add-batch-modal').classList.add('hidden');
+    });
+
     // Add SSC Form
     const sscForm = document.getElementById('add-ssc-form');
     if (sscForm) {
@@ -417,30 +432,38 @@ export function initAdminListeners() {
         batchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const ssc = document.getElementById('global-batch-ssc').value;
+            const sr = document.getElementById('batch-sr').value;
+            const dateVal = document.getElementById('batch-day').value;
+            const monthVal = document.getElementById('batch-month').value;
+            const jobRole = document.getElementById('batch-job-role').value.trim();
             const batchId = document.getElementById('batch-id').value.trim();
-            const jobRole = document.getElementById('job-role').value.trim();
-            const skillHub = document.getElementById('skill-hub').value.trim();
-            const dateVal = document.getElementById('batch-date').value;
+            const skillHub = document.getElementById('batch-skill-hub').value.trim();
 
             if (ssc && batchId && jobRole && dateVal) {
-                const dateObj = new Date(dateVal);
-                const day = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                const month = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-
                 const batchData = {
+                    sr,
                     ssc,
                     batchId,
                     jobRole,
                     skillHub,
-                    day,
-                    month,
+                    day: dateVal,
+                    month: monthVal,
                     timestamp: new Date().toISOString()
                 };
 
                 await addDoc(collection(db, "batches"), batchData);
                 await syncData();
                 renderBatchTable();
-                document.getElementById('create-batch-modal').classList.add('hidden');
+                document.getElementById('add-batch-modal').classList.add('hidden');
+
+                // Show success modal (if exists in HTML)
+                const successModal = document.getElementById('batch-success-modal');
+                if (successModal) {
+                    document.getElementById('new-batch-username').textContent = batchId;
+                    successModal.classList.remove('hidden');
+                    document.getElementById('close-modal-btn').onclick = () => successModal.classList.add('hidden');
+                }
+
                 e.target.reset();
             }
         });
