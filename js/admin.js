@@ -173,7 +173,7 @@ export function renderAssessorCredentials() {
 
         assessorFilterSsc.addEventListener('change', handleAssessorSscChange);
         assessorFilterBatch.addEventListener('change', renderAssessorCredentialsView);
-        assessorFilterDate.addEventListener('change', handleAssessorSscChange);
+        assessorFilterDate.addEventListener('change', handleAssessorDateChange);
 
         const printBtn = document.getElementById('print-credentials-btn');
         if (printBtn) {
@@ -182,38 +182,55 @@ export function renderAssessorCredentials() {
     }
 }
 
+function handleAssessorDateChange() {
+    const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
+    const assessorFilterBatch = document.getElementById('assessor-filter-batch');
+    const assessorFilterDate = document.getElementById('assessor-filter-date');
+
+    // If date is selected, clear SSC and Batch
+    if (assessorFilterDate.value) {
+        if (assessorFilterSsc) assessorFilterSsc.value = "";
+        if (assessorFilterBatch) {
+            assessorFilterBatch.innerHTML = '<option value="">Select Batch</option>';
+            assessorFilterBatch.disabled = true;
+        }
+    }
+    renderAssessorCredentialsView();
+}
+
 function exportAllCredentials() {
     const ssc = document.getElementById('assessor-filter-ssc').value;
     const batchId = document.getElementById('assessor-filter-batch').value;
     const selectedDate = document.getElementById('assessor-filter-date').value;
 
-    if (!ssc) {
-        alert("Please select a Sector Skill Council (SSC) first.");
+    if (!ssc && !selectedDate) {
+        alert("Please select a Date or Sector Skill Council (SSC) first.");
         return;
     }
 
     let batchesToPrint = [];
-    if (batchId) {
-        // Individual batch selected
+    let title = "Assessor Credentials";
+
+    if (selectedDate) {
+        batchesToPrint = state.batches.filter(b => b.day === selectedDate);
+        title += ` - ${selectedDate}`;
+    } else if (batchId) {
         batchesToPrint = state.batches.filter(b => b.batchId === batchId);
-    } else {
-        // Batch not selected, filter by SSC and Date
-        batchesToPrint = state.batches.filter(b => {
-            const matchesSsc = b.ssc === ssc;
-            const matchesDate = !selectedDate || b.day === selectedDate;
-            return matchesSsc && matchesDate;
-        });
+        title += ` - Batch ${batchId}`;
+    } else if (ssc) {
+        batchesToPrint = state.batches.filter(b => b.ssc === ssc);
+        title += ` - ${ssc}`;
     }
 
     if (batchesToPrint.length === 0) {
-        alert(`No batches found for SSC: ${ssc}${selectedDate ? ' on ' + selectedDate : ''}`);
+        alert("No batches found to export.");
         return;
     }
 
     let printHtml = `
         <html>
         <head>
-            <title>Assessor Credentials - ${ssc} - ${selectedDate || ''}</title>
+            <title>${title}</title>
             <style>
                 body { font-family: 'Outfit', sans-serif; padding: 20px; }
                 .credential-card { 
@@ -263,21 +280,21 @@ function handleAssessorSscChange() {
     const assessorFilterBatch = document.getElementById('assessor-filter-batch');
     const assessorFilterDate = document.getElementById('assessor-filter-date');
     const selectedSsc = assessorFilterSsc.value;
-    const selectedDate = assessorFilterDate ? assessorFilterDate.value : null;
+
+    // If SSC is selected, clear Date filter
+    if (selectedSsc && assessorFilterDate) {
+        assessorFilterDate.value = "";
+    }
 
     assessorFilterBatch.innerHTML = '<option value="">Select Batch</option>';
     assessorFilterBatch.disabled = true;
 
     if (!selectedSsc) {
-        renderAssessorCredentialsView(); // Will show "Please select" message
+        renderAssessorCredentialsView();
         return;
     }
 
-    const filteredBatches = state.batches.filter(b => {
-        const matchesSsc = b.ssc === selectedSsc;
-        const matchesDate = !selectedDate || b.day === selectedDate;
-        return matchesSsc && matchesDate;
-    });
+    const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
 
     if (filteredBatches.length > 0) {
         assessorFilterBatch.disabled = false;
@@ -289,7 +306,7 @@ function handleAssessorSscChange() {
         });
     }
 
-    renderAssessorCredentialsView(); // Dynamic update
+    renderAssessorCredentialsView();
 }
 
 function renderAssessorCredentialsView() {
@@ -299,30 +316,35 @@ function renderAssessorCredentialsView() {
     const credentialsContainer = document.getElementById('assessor-credentials-container');
     const printBtn = document.getElementById('print-credentials-btn');
 
-    const selectedSsc = assessorFilterSsc.value;
-    const selectedBatchId = assessorFilterBatch.value;
-    const selectedDate = assessorFilterDate ? assessorFilterDate.value : null;
+    const selectedSsc = assessorFilterSsc ? assessorFilterSsc.value : "";
+    const selectedBatchId = assessorFilterBatch ? assessorFilterBatch.value : "";
+    const selectedDate = assessorFilterDate ? assessorFilterDate.value : "";
 
-    if (!selectedSsc) {
-        if (credentialsContainer) credentialsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Sector Skill Council.</div>';
+    let batchesToDisplay = [];
+    let filterSource = "";
+
+    if (selectedDate) {
+        // Priority 1: Date based (All SSCs)
+        batchesToDisplay = state.batches.filter(b => b.day === selectedDate);
+        filterSource = `all batches on ${selectedDate}`;
+    } else if (selectedBatchId) {
+        // Priority 2: Specific Batch
+        batchesToDisplay = state.batches.filter(b => b.batchId === selectedBatchId);
+        filterSource = `batch ${selectedBatchId}`;
+    } else if (selectedSsc) {
+        // Priority 3: Specific SSC
+        batchesToDisplay = state.batches.filter(b => b.ssc === selectedSsc);
+        filterSource = `all batches for ${selectedSsc}`;
+    }
+
+    if (!selectedSsc && !selectedDate) {
+        if (credentialsContainer) credentialsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Date or Sector Skill Council.</div>';
         if (printBtn) printBtn.style.display = 'none';
         return;
     }
 
-    let batchesToDisplay = [];
-    if (selectedBatchId) {
-        batchesToDisplay = state.batches.filter(b => b.batchId === selectedBatchId);
-    } else {
-        batchesToDisplay = state.batches.filter(b => {
-            const matchesSsc = b.ssc === selectedSsc;
-            const matchesDate = !selectedDate || b.day === selectedDate;
-            return matchesSsc && matchesDate;
-        });
-    }
-
     if (batchesToDisplay.length === 0) {
-        const msg = selectedDate ? `No batches found for ${selectedSsc} on ${selectedDate}.` : `No batches found for ${selectedSsc}.`;
-        if (credentialsContainer) credentialsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted);">${msg}</div>`;
+        if (credentialsContainer) credentialsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted);">No batches found for ${filterSource}.</div>`;
         if (printBtn) printBtn.style.display = 'none';
         return;
     }
@@ -336,6 +358,7 @@ function renderAssessorCredentialsView() {
             <div class="glass-panel" style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 12px; border: 1px solid var(--glass-border); display: flex; flex-direction: column;">
                 <h3 style="margin-bottom: 1.5rem; text-align: center; color: var(--primary-color);">Login Credentials</h3>
                 <div style="margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem; color: #10b981; font-weight: bold;">Batch: ${batch.batchId}</div>
+                <div style="margin-bottom: 0.2rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">SSC: ${batch.ssc}</div>
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Username (Job Role)</label>
                     <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 1.1rem; user-select: all;">${batch.jobRole}</div>
