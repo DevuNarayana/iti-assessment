@@ -60,6 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 roleBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 state.currentRole = btn.dataset.role;
+
+                // Toggle QR buttons visibility
+                const qrLoginBtn = document.getElementById('qr-login-btn');
+                const qrUploadBtn = document.getElementById('qr-upload-btn');
+                if (qrLoginBtn) qrLoginBtn.style.display = state.currentRole === 'assessor' ? 'flex' : 'none';
+                if (qrUploadBtn) qrUploadBtn.style.display = state.currentRole === 'assessor' ? 'flex' : 'none';
+
                 document.getElementById('username').focus();
                 const errorMsg = document.getElementById('error-message');
                 if (errorMsg) errorMsg.textContent = '';
