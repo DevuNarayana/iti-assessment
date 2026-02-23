@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=92.0">
+    <link rel="stylesheet" href="style.css?v=93.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -64,7 +65,7 @@
                 </form>
                 <div id="error-message" class="error-msg"></div>
                 <div style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-                    Version 92.0 [Cloud Sync Active]
+                    Version 93.0 [Cloud Sync Active]
                 </div>
             </div>
         </main>
@@ -120,10 +121,14 @@
                                     </div>
                                 </div>
                                 <div class="section-actions">
-                                    <input type="file" id="bulk-batch-upload" accept=".csv" class="hidden">
+                                    <input type="file" id="bulk-batch-upload" accept=".csv, .xlsx, .xls" class="hidden">
+                                    <button class="action-btn secondary" id="download-sample-btn"
+                                        style="margin-right: 0.5rem; background: rgba(255, 255, 255, 0.05); border-color: #10b981; color: #10b981;">
+                                        Download Sample
+                                    </button>
                                     <button class="action-btn secondary" id="bulk-import-btn"
                                         style="margin-right: 0.5rem; background: rgba(255, 255, 255, 0.1);">
-                                        Bulk Import (CSV)
+                                        Bulk Import (Excel/CSV)
                                     </button>
                                     <button class="action-btn primary hidden" id="add-batch-btn">
                                         + Create Batch

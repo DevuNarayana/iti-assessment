@@ -890,8 +890,15 @@ async function handleBulkBatchImport(e) {
     const reader = new FileReader();
 
     reader.onload = async (event) => {
-        const text = event.target.result;
-        const rows = text.split('\n').slice(1); // skip header
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Convert to JSON (rows of arrays)
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const rows = jsonData.slice(1); // skip header
+
         let successCount = 0;
         let errorCount = 0;
 
@@ -900,21 +907,21 @@ async function handleBulkBatchImport(e) {
         importBtn.textContent = 'Importing...';
 
         for (const row of rows) {
-            const cols = row.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-            if (cols.length < 5) continue;
+            // Check if row has enough columns (SR, Date, Month, Job Role, Batch ID)
+            if (row.length < 5) continue;
 
-            const [sr, dateVal, monthVal, jobRole, batchId, skillHub] = cols;
+            const [sr, dateVal, monthVal, jobRole, batchId, skillHub] = row;
 
             if (batchId && jobRole) {
                 try {
                     const batchData = {
-                        sr: sr || "1",
+                        sr: String(sr || "1"),
                         ssc: ssc,
-                        batchId: batchId,
-                        jobRole: jobRole,
-                        skillHub: skillHub || "",
-                        day: dateVal || new Date().toISOString().split('T')[0],
-                        month: monthVal || new Date().toISOString().slice(0, 7),
+                        batchId: String(batchId),
+                        jobRole: String(jobRole),
+                        skillHub: String(skillHub || ""),
+                        day: String(dateVal || new Date().toISOString().split('T')[0]),
+                        month: String(monthVal || new Date().toISOString().slice(0, 7)),
                         timestamp: new Date().toISOString()
                     };
                     await addDoc(collection(db, "batches"), batchData);
@@ -931,9 +938,24 @@ async function handleBulkBatchImport(e) {
         alert(`Bulk Import Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
 
         importBtn.disabled = false;
-        importBtn.textContent = 'Bulk Import (CSV)';
+        importBtn.textContent = 'Bulk Import (Excel/CSV)';
         e.target.value = ''; // Reset input
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
+}
+
+function downloadSampleTemplate() {
+    const data = [
+        ["SR", "Date", "Month", "Job Role", "Batch ID", "Skill Hub"],
+        ["1", "2026-02-23", "2026-02", "Electrician", "BATCH_ELECT01", "Main Center"],
+        ["2", "2026-02-24", "2026-02", "Plumber", "BATCH_PLUMB01", "South Center"]
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Batches");
+
+    // XLSX.writeFile will trigger browser download
+    XLSX.writeFile(wb, "Batch_Import_Template.xlsx");
 }
