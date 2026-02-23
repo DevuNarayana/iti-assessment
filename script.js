@@ -184,6 +184,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         cancelQrBtn?.addEventListener('click', stopScanner);
 
+        // QR Upload Login
+        const qrUploadBtn = document.getElementById('qr-upload-btn');
+        const qrInput = document.getElementById('qr-input');
+
+        qrUploadBtn?.addEventListener('click', () => qrInput.click());
+
+        qrInput?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const tempScanner = new Html5Qrcode("qr-reader");
+            try {
+                const decodedText = await tempScanner.scanFile(file, true);
+                const data = JSON.parse(decodedText);
+                if (data.u && data.p) {
+                    document.getElementById('username').value = data.u;
+                    document.getElementById('password').value = data.p;
+
+                    roleBtns.forEach(b => b.classList.remove('active'));
+                    const assessorBtn = document.querySelector('.role-btn[data-role="assessor"]');
+                    if (assessorBtn) {
+                        assessorBtn.classList.add('active');
+                        state.currentRole = 'assessor';
+                    }
+
+                    const loginForm = document.getElementById('login-form');
+                    if (loginForm) loginForm.dispatchEvent(new Event('submit'));
+                }
+            } catch (err) {
+                console.error("QR Upload Error:", err);
+                showError("Invalid QR code image. Please upload a clear photo of the Batch QR.");
+            } finally {
+                e.target.value = '';
+            }
+        });
+
         console.log("ITI Assessment Portal Initialized - Modular V1");
     } catch (e) {
         console.error("Initialization Error:", e);
