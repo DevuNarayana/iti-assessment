@@ -167,7 +167,81 @@ export function renderAssessorCredentials() {
 
         assessorFilterSsc.addEventListener('change', handleAssessorSscChange);
         assessorFilterBatch.addEventListener('change', renderAssessorCredentialsView);
+
+        const printBtn = document.getElementById('print-credentials-btn');
+        if (printBtn) {
+            printBtn.addEventListener('click', exportAllCredentials);
+        }
     }
+}
+
+function exportAllCredentials() {
+    const ssc = document.getElementById('assessor-filter-ssc').value;
+    const batchId = document.getElementById('assessor-filter-batch').value;
+
+    if (!ssc) {
+        alert("Please select a Sector Skill Council (SSC) first.");
+        return;
+    }
+
+    let batchesToPrint = [];
+    if (batchId) {
+        batchesToPrint = state.batches.filter(b => b.batchId === batchId);
+    } else {
+        batchesToPrint = state.batches.filter(b => b.ssc === ssc);
+    }
+
+    if (batchesToPrint.length === 0) {
+        alert("No batches found to export.");
+        return;
+    }
+
+    let printHtml = `
+        <html>
+        <head>
+            <title>Assessor Credentials - ${ssc}</title>
+            <style>
+                body { font-family: 'Outfit', sans-serif; padding: 20px; }
+                .credential-card { 
+                    border: 2px solid #333; 
+                    padding: 15px; 
+                    margin-bottom: 15px; 
+                    page-break-inside: avoid;
+                    border-radius: 8px;
+                }
+                .title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #1e40af; }
+                .field { margin: 5px 0; }
+                .label { font-weight: bold; color: #555; }
+                .value { font-family: monospace; background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+                @media print {
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print" style="margin-bottom: 20px;">
+                <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Print Now</button>
+            </div>
+            <h1>Assessor Login Credentials</h1>
+            <p><strong>SSC:</strong> ${ssc}</p>
+            <hr>
+    `;
+
+    batchesToPrint.forEach(b => {
+        printHtml += `
+            <div class="credential-card">
+                <div class="title">Batch: ${b.batchId}</div>
+                <div class="field"><span class="label">Job Role (Username):</span> <span class="value">${b.jobRole}</span></div>
+                <div class="field"><span class="label">Batch ID (Password):</span> <span class="value">${b.batchId}</span></div>
+            </div>
+        `;
+    });
+
+    printHtml += `</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
 }
 
 function handleAssessorSscChange() {
