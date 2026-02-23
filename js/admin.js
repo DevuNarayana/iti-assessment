@@ -2,6 +2,7 @@ import { db, collection, addDoc, getDocs, doc, deleteDoc, query, where, getDoc }
 import { state } from './state.js';
 import { syncData } from './services.js';
 import { openLightbox } from './camera.js'; // for reviewing evidence
+import { showError } from './utils.js';
 
 // Helper to populate global SSC dropdown
 export function updateGlobalSscDropdown() {
@@ -879,4 +880,60 @@ export function renderWordGenerator() {
         }
         return rows;
     }
+}
+
+async function handleBulkBatchImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const ssc = document.getElementById('global-batch-ssc').value;
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+        const text = event.target.result;
+        const rows = text.split('\n').slice(1); // skip header
+        let successCount = 0;
+        let errorCount = 0;
+
+        const importBtn = document.getElementById('bulk-import-btn');
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importing...';
+
+        for (const row of rows) {
+            const cols = row.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+            if (cols.length < 5) continue;
+
+            const [sr, dateVal, monthVal, jobRole, batchId, skillHub] = cols;
+
+            if (batchId && jobRole) {
+                try {
+                    const batchData = {
+                        sr: sr || "1",
+                        ssc: ssc,
+                        batchId: batchId,
+                        jobRole: jobRole,
+                        skillHub: skillHub || "",
+                        day: dateVal || new Date().toISOString().split('T')[0],
+                        month: monthVal || new Date().toISOString().slice(0, 7),
+                        timestamp: new Date().toISOString()
+                    };
+                    await addDoc(collection(db, "batches"), batchData);
+                    successCount++;
+                } catch (err) {
+                    console.error("Bulk Import Error for row:", row, err);
+                    errorCount++;
+                }
+            }
+        }
+
+        await syncData();
+        renderBatchTable();
+        alert(`Bulk Import Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
+
+        importBtn.disabled = false;
+        importBtn.textContent = 'Bulk Import (CSV)';
+        e.target.value = ''; // Reset input
+    };
+
+    reader.readAsText(file);
 }
