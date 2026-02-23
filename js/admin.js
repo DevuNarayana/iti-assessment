@@ -629,8 +629,12 @@ export function initAdminListeners() {
             const skillHub = document.getElementById('batch-skill-hub').value.trim();
 
             if (ssc && batchId && jobRole && dateVal) {
+                // Calculate next SR for this SSC if not provided or to ensure sequence
+                const filteredBatches = state.batches.filter(b => b.ssc === ssc);
+                const nextSr = filteredBatches.reduce((max, b) => Math.max(max, parseInt(b.sr) || 0), 0) + 1;
+
                 const batchData = {
-                    sr,
+                    sr: sr || String(nextSr),
                     ssc,
                     batchId,
                     jobRole,
