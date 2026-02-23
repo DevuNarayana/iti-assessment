@@ -236,14 +236,16 @@ function exportAllCredentials() {
                 .credential-card { 
                     border: 2px solid #333; 
                     padding: 15px; 
-                    margin-bottom: 15px; 
+                    margin-bottom: 25px; 
                     page-break-inside: avoid;
                     border-radius: 8px;
+                    background: #fff;
                 }
-                .title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #1e40af; }
-                .field { margin: 5px 0; }
-                .label { font-weight: bold; color: #555; }
-                .value { font-family: monospace; background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+                .title { font-size: 1.4rem; font-weight: bold; margin-bottom: 5px; color: #1e40af; }
+                .ssc-tag { font-size: 0.9rem; color: #666; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                .field { margin: 8px 0; }
+                .label { font-weight: bold; color: #444; font-size: 0.85rem; display: block; }
+                .value { font-family: monospace; background: #f3f4f6; padding: 8px 12px; border-radius: 4px; display: block; margin-top: 4px; border: 1px solid #ddd; font-size: 1.2rem; }
                 @media print {
                     .no-print { display: none; }
                 }
@@ -251,19 +253,18 @@ function exportAllCredentials() {
         </head>
         <body>
             <div class="no-print" style="margin-bottom: 20px;">
-                <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Print Now</button>
+                <button onclick="window.print()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: sans-serif; font-weight: bold;">Print Credentials List</button>
             </div>
-            <h1>Assessor Login Credentials</h1>
-            <p><strong>SSC:</strong> ${ssc}</p>
-            <hr>
+            <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">${title}</h1>
     `;
 
     batchesToPrint.forEach(b => {
         printHtml += `
             <div class="credential-card">
                 <div class="title">Batch: ${b.batchId}</div>
-                <div class="field"><span class="label">Job Role (Username):</span> <span class="value">${b.jobRole}</span></div>
-                <div class="field"><span class="label">Batch ID (Password):</span> <span class="value">${b.batchId}</span></div>
+                <div class="ssc-tag">Council: ${b.ssc}</div>
+                <div class="field"><span class="label">Username (Job Role)</span> <span class="value">${b.jobRole}</span></div>
+                <div class="field"><span class="label">Password (Batch ID)</span> <span class="value">${b.batchId}</span></div>
             </div>
         `;
     });
@@ -328,14 +329,22 @@ function renderAssessorCredentialsView() {
         batchesToDisplay = state.batches.filter(b => b.day === selectedDate);
         filterSource = `all batches on ${selectedDate}`;
     } else if (selectedSsc) {
-        if (selectedBatchId) {
-            // Mode 2: Specific Batch
+        // Mode 2: SSC selected
+        if (selectedBatchId && selectedBatchId !== "") {
+            // Specific Batch chosen
             batchesToDisplay = state.batches.filter(b => b.batchId === selectedBatchId);
             filterSource = `batch ${selectedBatchId}`;
         } else {
-            // Mode 3: SSC selected but no Batch yet
-            if (credentialsContainer) credentialsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Batch.</div>';
-            if (printBtn) printBtn.style.display = 'inline-block'; // Allow bulk print even if one isn't selected on screen
+            // No Batch chosen yet - Clear view!
+            if (credentialsContainer) {
+                credentialsContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted);">
+                        <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">SSC: ${selectedSsc} Selected</div>
+                        <div>Please select a specific Batch to view login credentials.</div>
+                    </div>
+                `;
+            }
+            if (printBtn) printBtn.style.display = 'inline-block'; // Keep print button for bulk SSC export
             return;
         }
     }
