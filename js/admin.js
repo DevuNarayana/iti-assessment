@@ -405,18 +405,42 @@ function renderAssessorCredentialsView() {
     let html = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; width: 100%;">`;
 
     batchesToDisplay.forEach(batch => {
+        // Generate QR Code for the card
+        const qrContent = JSON.stringify({ u: batch.jobRole, p: batch.batchId });
+        const qr = new QRious({
+            value: qrContent,
+            size: 200,
+            level: 'M'
+        });
+        const qrDataUrl = qr.toDataURL();
+
         html += `
-            <div class="glass-panel" style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 12px; border: 1px solid var(--glass-border); display: flex; flex-direction: column;">
-                <h3 style="margin-bottom: 1.5rem; text-align: center; color: var(--primary-color);">Login Credentials</h3>
-                <div style="margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem; color: #10b981; font-weight: bold;">Batch: ${batch.batchId}</div>
-                <div style="margin-bottom: 0.2rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">SSC: ${batch.ssc}</div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Username (Job Role)</label>
-                    <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 1.1rem; user-select: all;">${batch.jobRole}</div>
+            <div class="glass-panel" style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: 12px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; align-items: center;">
+                <h3 style="margin-bottom: 1rem; text-align: center; color: var(--primary-color);">Login Credentials</h3>
+                
+                <div style="margin-bottom: 1.5rem; text-align: center;">
+                    <img src="${qrDataUrl}" style="width: 140px; height: 140px; background: white; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="margin-top: 0.5rem;">
+                        <button onclick="downloadSingleQR('${qrDataUrl}', '${batch.batchId}')" 
+                                style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 5px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.background='rgba(16, 185, 129, 0.2)'"
+                                onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'">
+                            Download QR (.png)
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Password (Batch ID)</label>
-                    <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 1.1rem; user-select: all;">${batch.batchId}</div>
+
+                <div style="width: 100%;">
+                    <div style="margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem; color: #10b981; font-weight: bold;">Batch: ${batch.batchId}</div>
+                    <div style="margin-bottom: 0.2rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">SSC: ${batch.ssc}</div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Username (Job Role)</label>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 1.1rem; user-select: all;">${batch.jobRole}</div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Password (Batch ID)</label>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 1.1rem; user-select: all;">${batch.batchId}</div>
+                    </div>
                 </div>
             </div>
         `;

@@ -14,7 +14,8 @@ import {
     initAdminListeners,
     deleteSsc,            // Exported for window
     deleteBatch,          // Exported for window
-    deleteEvidence        // Should be in admin, assumed created or reused
+    deleteEvidence,       // Should be in admin, assumed created or reused
+    downloadSingleQR
 } from './js/admin.js';
 import {
     renderAssessorTasks,
@@ -35,6 +36,7 @@ window.openLightbox = openLightbox;
 window.deletePhoto = deletePhoto;
 window.showHistory = showHistory;
 window.toggleSidebar = toggleSidebar;
+window.downloadSingleQR = downloadSingleQR;
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
