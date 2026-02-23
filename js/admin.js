@@ -1217,3 +1217,12 @@ function downloadSampleTemplate() {
     // XLSX.writeFile will trigger browser download
     XLSX.writeFile(wb, "Batch_Import_Template.xlsx");
 }
+
+export function downloadSingleQR(dataUrl, batchId) {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `QR_${batchId}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
