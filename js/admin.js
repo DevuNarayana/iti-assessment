@@ -1116,16 +1116,21 @@ async function handleBulkBatchImport(e) {
         importBtn.disabled = true;
         importBtn.textContent = 'Importing...';
 
+        // Calculate starting SR for this SSC
+        const filteredBatches = state.batches.filter(b => b.ssc === ssc);
+        let currentMaxSr = filteredBatches.reduce((max, b) => Math.max(max, parseInt(b.sr) || 0), 0);
+
         for (const row of rows) {
             // Check if row has enough columns (SR, Date, Month, Job Role, Batch ID)
             if (row.length < 5) continue;
 
-            const [sr, dateVal, monthVal, jobRole, batchId, skillHub] = row;
+            const [srInput, dateVal, monthVal, jobRole, batchId, skillHub] = row;
 
             if (batchId && jobRole) {
                 try {
+                    currentMaxSr++; // Auto-increment SR
                     const batchData = {
-                        sr: String(sr || "1"),
+                        sr: String(currentMaxSr),
                         ssc: ssc,
                         batchId: String(batchId),
                         jobRole: String(jobRole),
