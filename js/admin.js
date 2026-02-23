@@ -227,6 +227,10 @@ function exportAllCredentials() {
         return;
     }
 
+    const csvHeaders = ["Batch ID", "SSC", "Job Role (Username)", "Batch ID (Password)"];
+    const csvRows = batchesToPrint.map(b => `"${b.batchId}","${b.ssc}","${b.jobRole}","${b.batchId}"`);
+    const csvContent = [csvHeaders.join(","), ...csvRows].join("\\n");
+
     let printHtml = `
         <html>
         <head>
@@ -249,11 +253,15 @@ function exportAllCredentials() {
                 @media print {
                     .no-print { display: none; }
                 }
+                .btn { padding: 12px 24px; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: sans-serif; font-weight: bold; margin-right: 10px; }
+                .btn-print { background: #3b82f6; }
+                .btn-download { background: #10b981; }
             </style>
         </head>
         <body>
-            <div class="no-print" style="margin-bottom: 20px;">
-                <button onclick="window.print()" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-family: sans-serif; font-weight: bold;">Print Credentials List</button>
+            <div class="no-print" style="margin-bottom: 20px; display: flex;">
+                <button onclick="window.print()" class="btn btn-print">Print Credentials List</button>
+                <button id="download-csv-btn" class="btn btn-download">Download CSV (Excel)</button>
             </div>
             <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">${title}</h1>
     `;
@@ -269,7 +277,23 @@ function exportAllCredentials() {
         `;
     });
 
-    printHtml += `</body></html>`;
+    const fileName = title.replace(/\\s+/g, '_') + ".csv";
+    printHtml += `
+        <script>
+            document.getElementById('download-csv-btn').onclick = () => {
+                const csvData = \`${csvContent}\`;
+                const blob = new Blob([csvData], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', '${fileName}');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+        </script>
+    </body></html>`;
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printHtml);
