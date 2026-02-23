@@ -267,12 +267,27 @@ function exportAllCredentials() {
     `;
 
     batchesToPrint.forEach(b => {
+        // Generate QR Code data
+        const qrContent = JSON.stringify({ u: b.jobRole, p: b.batchId });
+        const qr = new QRious({
+            value: qrContent,
+            size: 150,
+            level: 'M'
+        });
+        const qrDataUrl = qr.toDataURL();
+
         printHtml += `
-            <div class="credential-card">
-                <div class="title">Batch: ${b.batchId}</div>
-                <div class="ssc-tag">Council: ${b.ssc}</div>
-                <div class="field"><span class="label">Username (Job Role)</span> <span class="value">${b.jobRole}</span></div>
-                <div class="field"><span class="label">Password (Batch ID)</span> <span class="value">${b.batchId}</span></div>
+            <div class="credential-card" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <div class="title">Batch: ${b.batchId}</div>
+                    <div class="ssc-tag">Council: ${b.ssc}</div>
+                    <div class="field"><span class="label">Username (Job Role)</span> <span class="value">${b.jobRole}</span></div>
+                    <div class="field"><span class="label">Password (Batch ID)</span> <span class="value">${b.batchId}</span></div>
+                </div>
+                <div style="margin-left: 20px; text-align: center;">
+                    <img src="${qrDataUrl}" style="width: 120px; height: 120px; border: 1px solid #eee; padding: 5px; border-radius: 4px;">
+                    <div style="font-size: 0.7rem; color: #666; margin-top: 5px; font-weight: bold;">Scan for Instant Login</div>
+                </div>
             </div>
         `;
     });

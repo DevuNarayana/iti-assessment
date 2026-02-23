@@ -123,6 +123,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
+        // Initialize QR Scanner
+        let html5QrCode = null;
+        const qrLoginBtn = document.getElementById('qr-login-btn');
+        const scannerModal = document.getElementById('qr-scanner-modal');
+        const cancelQrBtn = document.getElementById('cancel-qr-btn');
+
+        const stopScanner = async () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                await html5QrCode.stop();
+                await html5QrCode.clear();
+            }
+            scannerModal.classList.add('hidden');
+        };
+
+        qrLoginBtn?.addEventListener('click', () => {
+            scannerModal.classList.remove('hidden');
+            html5QrCode = new Html5Qrcode("qr-reader");
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    try {
+                        const data = JSON.parse(decodedText);
+                        if (data.u && data.p) {
+                            // Auto-login logic
+                            document.getElementById('username').value = data.u;
+                            document.getElementById('password').value = data.p;
+
+                            // Ensure role is assessor
+                            roleBtns.forEach(b => b.classList.remove('active'));
+                            const assessorBtn = document.querySelector('.role-btn[data-role="assessor"]');
+                            if (assessorBtn) {
+                                assessorBtn.classList.add('active');
+                                state.currentRole = 'assessor';
+                            }
+
+                            stopScanner();
+
+                            // Trigger form submission
+                            const loginForm = document.getElementById('login-form');
+                            if (loginForm) loginForm.dispatchEvent(new Event('submit'));
+                        }
+                    } catch (err) {
+                        console.error("QR Code Error:", err);
+                    }
+                },
+                (errorMessage) => {
+                    // console.log("QR Scan Error:", errorMessage);
+                }
+            ).catch((err) => {
+                console.error("Flash/Init Error:", err);
+                alert("Camera access failed or another error occurred.");
+                stopScanner();
+            });
+        });
+
+        cancelQrBtn?.addEventListener('click', stopScanner);
+
         console.log("ITI Assessment Portal Initialized - Modular V1");
     } catch (e) {
         console.error("Initialization Error:", e);
