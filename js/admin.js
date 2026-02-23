@@ -324,17 +324,20 @@ function renderAssessorCredentialsView() {
     let filterSource = "";
 
     if (selectedDate) {
-        // Priority 1: Date based (All SSCs)
+        // Mode 1: Date based (Show all batches for that day across all SSCs)
         batchesToDisplay = state.batches.filter(b => b.day === selectedDate);
         filterSource = `all batches on ${selectedDate}`;
-    } else if (selectedBatchId) {
-        // Priority 2: Specific Batch
-        batchesToDisplay = state.batches.filter(b => b.batchId === selectedBatchId);
-        filterSource = `batch ${selectedBatchId}`;
     } else if (selectedSsc) {
-        // Priority 3: Specific SSC
-        batchesToDisplay = state.batches.filter(b => b.ssc === selectedSsc);
-        filterSource = `all batches for ${selectedSsc}`;
+        if (selectedBatchId) {
+            // Mode 2: Specific Batch
+            batchesToDisplay = state.batches.filter(b => b.batchId === selectedBatchId);
+            filterSource = `batch ${selectedBatchId}`;
+        } else {
+            // Mode 3: SSC selected but no Batch yet
+            if (credentialsContainer) credentialsContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Batch.</div>';
+            if (printBtn) printBtn.style.display = 'inline-block'; // Allow bulk print even if one isn't selected on screen
+            return;
+        }
     }
 
     if (!selectedSsc && !selectedDate) {
