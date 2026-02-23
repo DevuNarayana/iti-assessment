@@ -156,8 +156,14 @@ export async function deleteBatch(id) {
 export function renderAssessorCredentials() {
     const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
     const assessorFilterBatch = document.getElementById('assessor-filter-batch');
+    const assessorFilterDate = document.getElementById('assessor-filter-date');
 
     if (assessorFilterSsc && assessorFilterSsc.options.length === 1) {
+        // Initialize date filter with today's date
+        if (assessorFilterDate) {
+            assessorFilterDate.value = new Date().toISOString().split('T')[0];
+        }
+
         state.sscs.forEach(ssc => {
             const opt = document.createElement('option');
             opt.value = ssc.name;
@@ -178,6 +184,7 @@ export function renderAssessorCredentials() {
 function exportAllCredentials() {
     const ssc = document.getElementById('assessor-filter-ssc').value;
     const batchId = document.getElementById('assessor-filter-batch').value;
+    const selectedDate = document.getElementById('assessor-filter-date').value;
 
     if (!ssc) {
         alert("Please select a Sector Skill Council (SSC) first.");
@@ -186,20 +193,26 @@ function exportAllCredentials() {
 
     let batchesToPrint = [];
     if (batchId) {
+        // Individual batch selected
         batchesToPrint = state.batches.filter(b => b.batchId === batchId);
     } else {
-        batchesToPrint = state.batches.filter(b => b.ssc === ssc);
+        // Batch not selected, filter by SSC and Date
+        batchesToPrint = state.batches.filter(b => {
+            const matchesSsc = b.ssc === ssc;
+            const matchesDate = !selectedDate || b.day === selectedDate;
+            return matchesSsc && matchesDate;
+        });
     }
 
     if (batchesToPrint.length === 0) {
-        alert("No batches found to export.");
+        alert(`No batches found for SSC: ${ssc}${selectedDate ? ' on ' + selectedDate : ''}`);
         return;
     }
 
     let printHtml = `
         <html>
         <head>
-            <title>Assessor Credentials - ${ssc}</title>
+            <title>Assessor Credentials - ${ssc} - ${selectedDate || ''}</title>
             <style>
                 body { font-family: 'Outfit', sans-serif; padding: 20px; }
                 .credential-card { 
