@@ -469,6 +469,28 @@ export function initAdminListeners() {
             }
         });
     }
+
+    // Bulk Import & Sample Template Listeners
+    const bulkImportBtn = document.getElementById('bulk-import-btn');
+    const bulkUploadInput = document.getElementById('bulk-batch-upload');
+    const downloadSampleBtn = document.getElementById('download-sample-btn');
+
+    if (bulkImportBtn && bulkUploadInput) {
+        bulkImportBtn.addEventListener('click', () => {
+            const selectedSsc = document.getElementById('global-batch-ssc').value;
+            if (!selectedSsc) {
+                alert('Please select a Sector Skill Council first.');
+                return;
+            }
+            bulkUploadInput.click();
+        });
+
+        bulkUploadInput.addEventListener('change', handleBulkBatchImport);
+    }
+
+    if (downloadSampleBtn) {
+        downloadSampleBtn.addEventListener('click', downloadSampleTemplate);
+    }
 }
 
 // Word Generator Logic
