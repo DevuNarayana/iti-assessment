@@ -65,8 +65,9 @@ export function renderBatchTable() {
     const selectedSsc = globalBatchSscSelect ? globalBatchSscSelect.value : '';
 
     if (!selectedSsc) {
-        batchesTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
+        batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
         if (batchCount) batchCount.textContent = 0;
+        document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         return;
     }
 
@@ -81,12 +82,16 @@ export function renderBatchTable() {
     if (batchCount) batchCount.textContent = filteredBatches.length;
 
     if (filteredBatches.length === 0) {
-        batchesTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
+        batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
+        document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         return;
     }
 
+    document.getElementById('bulk-download-pdf-btn')?.classList.remove('hidden');
+
     batchesTableBody.innerHTML = filteredBatches.map((batch) => `
         <tr>
+            <td><input type="checkbox" class="batch-select" data-id="${batch.batchId}"></td>
             <td>${batch.sr}</td>
             <td>${batch.day}</td>
             <td>${batch.month}</td>
@@ -728,6 +733,107 @@ export function initAdminListeners() {
 
     if (downloadSampleBtn) {
         downloadSampleBtn.addEventListener('click', downloadSampleTemplate);
+    }
+
+    // Select All Batches Logic
+    document.getElementById('select-all-batches')?.addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.batch-select');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+    });
+
+    // Bulk Download PDF Btn
+    document.getElementById('bulk-download-pdf-btn')?.addEventListener('click', generateBulkPDFZip);
+}
+
+async function generateBulkPDFZip() {
+    const selectedCheckboxes = document.querySelectorAll('.batch-select:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one batch to download.');
+        return;
+    }
+
+    const confirmDownload = confirm(`This will generate and download ${selectedCheckboxes.length} PDFs. It may take a moment. Continue?`);
+    if (!confirmDownload) return;
+
+    const btn = document.getElementById('bulk-download-pdf-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating ZIP...';
+
+    const zip = new JSZip();
+    const folder = zip.folder("Batch_PDFs");
+
+    try {
+        for (let i = 0; i < selectedCheckboxes.length; i++) {
+            const batchId = selectedCheckboxes[i].dataset.id;
+            const batch = state.batches.find(b => b.batchId === batchId);
+            if (!batch) continue;
+
+            btn.textContent = `Processing ${i + 1}/${selectedCheckboxes.length}...`;
+
+            // Get attendance photos for this batch
+            const attendancePhotos = [];
+            const q = query(collection(db, "assessments"),
+                where("batchId", "==", batchId),
+                where("type", "==", "Attendance")
+            );
+            const snapshot = await getDocs(q);
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.photos) attendancePhotos.push(...data.photos);
+            });
+
+            if (attendancePhotos.length === 0) continue;
+
+            // Generate PDF Blob
+            const element = document.createElement('div');
+            element.style.padding = '40px';
+            element.style.background = 'white';
+            element.innerHTML = `
+                <div style="font-family: Arial; color: black;">
+                    <h1 style="text-align: center;">Attendance Report</h1>
+                    <p><b>Batch ID:</b> ${batch.batchId}</p>
+                    <p><b>SSC:</b> ${batch.ssc}</p>
+                    <p><b>Job Role:</b> ${batch.jobRole}</p>
+                    <hr>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                        ${attendancePhotos.map(url => `
+                            <img src="${url}" style="width: 100%; max-width: 800px; margin-bottom: 20px;">
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0,
+                filename: `Attendance_${batchId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 1.5, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            folder.file(`Attendance_${batchId}.pdf`, pdfBlob);
+        }
+
+        btn.textContent = 'Finalizing ZIP...';
+        const content = await zip.generateAsync({ type: "blob" });
+        const zipName = `Batches_Reports_${new Date().getTime()}.zip`;
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = zipName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert('Bulk download complete!');
+    } catch (err) {
+        console.error("Bulk Zip Error:", err);
+        alert('An error occurred during bulk generation.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
     }
 }
 
