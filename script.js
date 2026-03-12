@@ -14,9 +14,11 @@ import {
     initAdminListeners,
     deleteSsc,            // Exported for window
     deleteBatch,          // Exported for window
-    deleteEvidence,       // Should be in admin, assumed created or reused
-    downloadSingleQR
-} from './js/admin.js?v=122.0';
+    deleteEvidence,
+    downloadSingleQR,
+    generateWordDoc,
+    generateAttendanceReport
+} from './js/admin.js?v=123.0';
 import {
     renderAssessorTasks,
     initAssessorListeners,
@@ -37,6 +39,9 @@ window.deletePhoto = deletePhoto;
 window.showHistory = showHistory;
 window.toggleSidebar = toggleSidebar;
 window.downloadSingleQR = downloadSingleQR;
+window.deleteEvidence = deleteEvidence;
+window.generateWordDoc = generateWordDoc;
+window.generateAttendanceReport = generateAttendanceReport;
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {

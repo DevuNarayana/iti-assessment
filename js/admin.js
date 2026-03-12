@@ -1041,7 +1041,7 @@ export async function generateAttendanceReport(targetBatchId = null, isBulk = fa
     }
 }
 
-async function generateWordDoc(isPdf = false, targetBatchId = null, isBulk = false) {
+export async function generateWordDoc(isPdf = false, targetBatchId = null, isBulk = false) {
     const selectedBatchId = targetBatchId || document.getElementById('word-filter-batch').value;
     if (!selectedBatchId) return null;
 
