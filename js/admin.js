@@ -1095,7 +1095,7 @@ export async function generateWordDoc(isPdf = false, targetBatchId = null, isBul
                 <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in; border-collapse: collapse;">
                     <tr>
                         <td height="9.8in" style="border: 6pt solid black; padding: 2pt; vertical-align: top; text-align: center;">
-                            <div style="text-align: center; font-weight: bold; font-size: 14pt;">
+                            <div style="text-align: center; font-weight: bold; font-size: 14pt; color: black;">
                                 <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
                                 <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
                                 <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
@@ -1113,7 +1113,7 @@ export async function generateWordDoc(isPdf = false, targetBatchId = null, isBul
         htmlPagesForPdf += `
             <div style="${pageBreakPdf} width: 8in; padding: 0.1in; background: white;">
                 <div style="border: 7.5pt solid black; min-height: 10in; padding: 10pt;">
-                    <div style="text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 10pt;">
+                    <div style="text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 10pt; color: black;">
                          <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
                          <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
                          <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
