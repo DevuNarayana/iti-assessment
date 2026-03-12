@@ -68,6 +68,7 @@ export function renderBatchTable() {
         batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
         if (batchCount) batchCount.textContent = 0;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
+        document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         return;
     }
 
@@ -84,10 +85,12 @@ export function renderBatchTable() {
     if (filteredBatches.length === 0) {
         batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
+        document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         return;
     }
 
     document.getElementById('bulk-download-pdf-btn')?.classList.remove('hidden');
+    document.getElementById('bulk-download-evidence-btn')?.classList.remove('hidden');
 
     batchesTableBody.innerHTML = filteredBatches.map((batch) => `
         <tr>
@@ -743,6 +746,9 @@ export function initAdminListeners() {
 
     // Bulk Download PDF Btn
     document.getElementById('bulk-download-pdf-btn')?.addEventListener('click', generateBulkPDFZip);
+
+    // Bulk Download Evidence Btn
+    document.getElementById('bulk-download-evidence-btn')?.addEventListener('click', () => generateBulkEvidenceZip());
 }
 
 async function generateBulkPDFZip() {
@@ -840,10 +846,11 @@ async function generateBulkPDFZip() {
 // Word Generator Logic
 export function renderWordGenerator() {
     const wordFilterSsc = document.getElementById('word-filter-ssc');
-    const wordFilterBatch = document.getElementById('word-filter-batch');
-    const wordPreviewContainer = document.getElementById('word-preview-container');
+    const wordTableBody = document.getElementById('word-batch-table-body');
+    const bulkWordBtn = document.getElementById('bulk-word-zip-btn');
+    const bulkPdfBtn = document.getElementById('bulk-pdf-zip-btn');
+    const bulkAttendanceBtn = document.getElementById('bulk-attendance-zip-btn');
 
-    // Check if options are already populated to avoid duplication
     if (wordFilterSsc && wordFilterSsc.options.length === 1) {
         state.sscs.forEach(ssc => {
             const opt = document.createElement('option');
@@ -854,398 +861,359 @@ export function renderWordGenerator() {
 
         wordFilterSsc.onchange = () => {
             const selectedSsc = wordFilterSsc.value;
-            wordFilterBatch.innerHTML = '<option value="">Select Batch</option>';
-            wordFilterBatch.disabled = true;
-            // Reset preview
-            if (wordPreviewContainer) wordPreviewContainer.innerHTML = '<p>Select a Batch to generate the Evidence Report.</p>';
-
-            if (selectedSsc) {
-                const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
-                if (filteredBatches.length > 0) {
-                    wordFilterBatch.disabled = false;
-                    filteredBatches.forEach(b => {
-                        const opt = document.createElement('option');
-                        opt.value = b.batchId;
-                        opt.textContent = b.batchId;
-                        wordFilterBatch.appendChild(opt);
-                    });
-                } else {
-                    wordFilterBatch.innerHTML = '<option value="">No Batches Found</option>';
-                }
-            }
-        };
-
-        wordFilterBatch.onchange = () => {
-            const selectedBatchId = wordFilterBatch.value;
-            if (!wordPreviewContainer) return;
-
-            if (!selectedBatchId) {
-                wordPreviewContainer.innerHTML = '<p>Select a Batch to generate the Evidence Report.</p>';
+            if (!selectedSsc) {
+                wordTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council to view batches for report generation.</td></tr>`;
+                bulkWordBtn.classList.add('hidden');
+                bulkPdfBtn.classList.add('hidden');
+                bulkAttendanceBtn.classList.add('hidden');
                 return;
             }
 
-            // Show Ready State with both Word and PDF options
-            wordPreviewContainer.innerHTML = `
-                 <div style="text-align: center;">
-                     <svg width="64" height="64" fill="#2563eb" viewBox="0 0 24 24" style="margin-bottom: 1rem;">
-                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0"/>
-                     </svg>
-                     <h3>Ready to Generate</h3>
-                     <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Report for Batch: <strong>${selectedBatchId}</strong></p>
-                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                         <button id="regen-word-btn" class="action-btn primary" style="background: #2563eb; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
-                              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0V4c0-1.1-.9-2-2-2zm-2 16H8v-2h4v2zm3-4H8v-2h7v2zm0-4H8V8h7v2z"/></svg>
-                             Download Word
-                         </button>
-                         <button id="regen-pdf-btn" class="action-btn" style="background: #e11d48; color: white; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
-                             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
-                             Download PDF
-                         </button>
-                         <button id="download-attendance-btn" class="action-btn" style="background: #9333ea; color: white; padding: 0.75rem 2rem; display: flex; align-items: center; gap: 0.5rem;">
-                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                             Download Attendance
-                         </button>
-                     </div>
-                 </div>
-             `;
-            document.getElementById('regen-word-btn').addEventListener('click', () => generateWordDoc(false));
-            document.getElementById('regen-pdf-btn').addEventListener('click', () => generateWordDoc(true));
+            const batches = state.batches.filter(b => b.ssc === selectedSsc);
+            batches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
 
-            // Attendance Download Hook
-            const attendanceBtn = document.getElementById('download-attendance-btn');
-            if (attendanceBtn) {
-                attendanceBtn.style.display = 'block';
-                attendanceBtn.onclick = () => generateAttendanceReport();
+            if (batches.length === 0) {
+                wordTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for ${selectedSsc}.</td></tr>`;
+                bulkWordBtn.classList.add('hidden');
+                bulkPdfBtn.classList.add('hidden');
+                bulkAttendanceBtn.classList.add('hidden');
+                return;
             }
+
+            bulkWordBtn.classList.remove('hidden');
+            bulkPdfBtn.classList.remove('hidden');
+            bulkAttendanceBtn.classList.remove('hidden');
+
+            wordTableBody.innerHTML = batches.map(batch => `
+                <tr>
+                    <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}"></td>
+                    <td style="font-weight: bold;">${batch.batchId}</td>
+                    <td>${batch.jobRole}</td>
+                    <td>${batch.skillHub || 'N/A'}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px;">Word</button>
+                            <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px;">PDF</button>
+                            <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px;">Attend</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         };
+
+        // Select All Handler
+        document.getElementById('select-all-word-batches')?.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.word-batch-select');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+
+        // Bulk Actions
+        bulkWordBtn?.addEventListener('click', () => generateBulkGenericZip('word'));
+        bulkPdfBtn?.addEventListener('click', () => generateBulkGenericZip('pdf'));
+        bulkAttendanceBtn?.addEventListener('click', () => generateBulkGenericZip('attendance'));
+    }
+}
+
+// Global hook for single attendance
+window.generateAttendanceReportForBatch = (batchId) => {
+    // We need to set the value so generateAttendanceReport works, or refactor generateAttendanceReport
+    const oldVal = document.getElementById('word-filter-batch')?.value;
+    const mockSelect = document.createElement('select');
+    mockSelect.id = 'word-filter-batch';
+    mockSelect.value = batchId;
+    // Actually, let's just refactor generateAttendanceReport slightly to accept ID
+    generateAttendanceReport(batchId);
+};
+
+async function generateBulkGenericZip(type) {
+    const selected = document.querySelectorAll('.word-batch-select:checked');
+    if (selected.length === 0) { alert('Select at least one batch.'); return; }
+
+    const btn = document.getElementById(`bulk-${type}-zip-btn`);
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    const zip = new JSZip();
+    try {
+        for (let i = 0; i < selected.length; i++) {
+            const bId = selected[i].dataset.id;
+            btn.textContent = `${type} ${i + 1}/${selected.length}...`;
+
+            let blob;
+            let ext;
+            if (type === 'word') {
+                blob = await generateWordDoc(false, bId, true);
+                ext = 'doc';
+            } else if (type === 'pdf') {
+                blob = await generateWordDoc(true, bId, true);
+                ext = 'pdf';
+            } else if (type === 'attendance') {
+                blob = await generateAttendanceReport(bId, true);
+                ext = 'pdf';
+            }
+
+            if (blob) zip.file(`${type}_Report_${bId}.${ext}`, blob);
+        }
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Bulk_${type}_Reports_${Date.now()}.zip`;
+        link.click();
+    } catch (e) {
+        console.error(e);
+        alert('Error during bulk generation.');
+    }
+    btn.disabled = false;
+    btn.textContent = originalText;
+}
+
+// Attendance Download Logic
+export async function generateAttendanceReport(targetBatchId = null, isBulk = false) {
+    const selectedBatchId = targetBatchId || document.getElementById('word-filter-batch')?.value;
+    if (!selectedBatchId) return;
+
+    const batch = state.batches.find(b => b.batchId === selectedBatchId);
+    if (!batch) return;
+
+    console.log('Generating Attendance Report...');
+    const attendanceItems = [];
+
+    try {
+        const q = query(collection(db, "assessments"),
+            where("batchId", "==", selectedBatchId),
+            where("type", "==", "Attendance")
+        );
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.photos) attendanceItems.push(...data.photos);
+        });
+    } catch (err) {
+        console.error("Error fetching attendance:", err);
+        alert("Error fetching attendance data.");
+        return;
     }
 
-    async function generateAttendanceReport() {
-        const selectedBatchId = document.getElementById('word-filter-batch').value;
-        if (!selectedBatchId) return;
+    if (attendanceItems.length === 0) {
+        alert('No attendance records found for this batch!');
+        return;
+    }
 
-        const batch = state.batches.find(b => b.batchId === selectedBatchId);
-        if (!batch) return;
+    // Create PDF logic for attendance
+    const element = document.createElement('div');
+    element.style.padding = '40px';
+    element.style.background = 'white';
+    element.innerHTML = `
+        <div id="attendance-content" style="width: 100%; height: 100%;">
+            ${attendanceItems.map((url, idx) => {
+        const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
+        const pageBreak = idx > 0 ? 'page-break-before: always;' : '';
 
-        console.log('Generating Attendance Report...');
-        const attendanceItems = [];
-
-        try {
-            const q = query(collection(db, "assessments"),
-                where("batchId", "==", selectedBatchId),
-                where("type", "==", "Attendance")
-            );
-            const snapshot = await getDocs(q);
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.photos) attendanceItems.push(...data.photos);
-            });
-        } catch (err) {
-            console.error("Error fetching attendance:", err);
-            alert("Error fetching attendance data.");
-            return;
-        }
-
-        if (attendanceItems.length === 0) {
-            alert('No attendance records found for this batch!');
-            return;
-        }
-
-        // OPTIMIZATION: If there is exactly one PDF file, download it directly
-        // instead of wrapping it in a generated PDF report.
-        if (attendanceItems.length === 1) {
-            const url = attendanceItems[0];
-            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
-            if (isPdf) {
-                console.log('Single PDF detected, downloading directly...');
-
-                try {
-                    // Fetch as blob to force download with correct name
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    const objectUrl = URL.createObjectURL(blob);
-
-                    const link = document.createElement('a');
-                    link.href = objectUrl;
-                    link.download = `Attendance_${batch.batchId}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    // Clean up
-                    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
-                } catch (e) {
-                    console.error("Download failed, fallback to direct link", e);
-                    window.open(url, '_blank');
-                }
-                return;
-            }
-        }
-
-        // Create PDF logic for attendance
-        const element = document.createElement('div');
-        element.style.padding = '40px';
-        element.style.background = 'white';
-        element.style.color = 'black';
-        element.style.fontFamily = 'Arial, sans-serif';
-
-        element.innerHTML = `
-            <div id="attendance-content" style="width: 100%; height: 100%;">
-                ${attendanceItems.map((url, idx) => {
-            const isPdf = url.includes('.pdf') || url.startsWith('data:application/pdf') || url.includes('/raw/upload/');
-            const pageBreak = idx > 0 ? 'page-break-before: always;' : '';
-
-            if (isPdf) {
-                return `<div style="${pageBreak} padding: 40px; border: 2px dashed #cbd5e1; margin-top: 20px; text-align: center; border-radius: 12px; background: #f8fafc;">
-                                <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
-                                <p style="font-size: 18px; font-weight: bold; color: #1e293b;">Attendance File ${idx + 1} (PDF)</p>
-                                <p style="color: #64748b; margin-bottom: 20px;">This is an uploaded document.</p>
-                                <div style="display: flex; gap: 10px; justify-content: center;">
-                                    <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Original PDF</a>
-                                </div>
-                            </div>`;
-            }
-            // Maximized Image Layout - Clean, no badges, just image
-            return `<div style="${pageBreak} position: relative; width: 100%; height: 11.2in; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <img src="${url}" style="width: 100%; height: 100%; object-fit: fill;">
+        if (isPdf) {
+            return `<div style="${pageBreak} padding: 40px; border: 2px dashed #cbd5e1; margin-top: 20px; text-align: center; border-radius: 12px; background: #f8fafc;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+                            <p style="font-size: 18px; font-weight: bold; color: #1e293b;">Attendance File ${idx + 1} (PDF)</p>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Original PDF</a>
+                            </div>
                         </div>`;
-        }).join('')}
+        }
+        return `<div style="${pageBreak} position: relative; width: 100%; height: 11.2in; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <img src="${url}" style="width: 100%; height: 100%; object-fit: fill;">
+                    </div>`;
+    }).join('')}
+        </div>
+    `;
+
+    const opt = {
+        margin: 0,
+        filename: `Attendance_${batch.batchId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 1.5, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (isBulk) {
+        return await html2pdf().set(opt).from(element).output('blob');
+    } else {
+        html2pdf().set(opt).from(element).save();
+    }
+}
+
+async function generateWordDoc(isPdf = false, targetBatchId = null, isBulk = false) {
+    const selectedBatchId = targetBatchId || document.getElementById('word-filter-batch').value;
+    if (!selectedBatchId) return null;
+
+    const batch = state.batches.find(b => b.batchId === selectedBatchId);
+    if (!batch) { if (!isBulk) alert('Batch data not found.'); return null; }
+
+    const photoGroups = { 'Theory': [], 'Practical': [], 'Viva': [], 'Group': [] };
+
+    try {
+        const q = query(collection(db, "assessments"), where("batchId", "==", selectedBatchId));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.photos && Array.isArray(data.photos)) {
+                const type = data.type || 'Unknown';
+                if (photoGroups[type]) photoGroups[type].push(...data.photos);
+            }
+        });
+    } catch (err) {
+        console.error("Error fetching photos:", err);
+        return null;
+    }
+
+    const orderedPhotos = [
+        ...photoGroups['Theory'],
+        ...photoGroups['Practical'],
+        ...photoGroups['Viva'],
+        ...photoGroups['Group']
+    ];
+
+    if (orderedPhotos.length === 0) {
+        if (!isBulk) alert('No photos found for this batch!');
+        return null;
+    }
+
+    // Chunk photos by 6 for multi-page
+    const chunk = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
+    const photoChunks = chunk(orderedPhotos, 6);
+
+    let htmlPagesForWord = '';
+    let htmlPagesForPdf = '';
+
+    photoChunks.forEach((batchChunk, index) => {
+        const pageBreakWord = index > 0 ? '<br clear=all style="mso-special-character:line-break;page-break-before:always">' : '';
+        const pageBreakPdf = index > 0 ? 'page-break-before: always;' : '';
+
+        // Word HTML
+        htmlPagesForWord += `
+            ${pageBreakWord}
+            <div class="Section1">
+                <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in; border-collapse: collapse;">
+                    <tr>
+                        <td height="9.8in" style="border: 6pt solid black; padding: 2pt; vertical-align: top; text-align: center;">
+                            <div style="text-align: center; font-weight: bold; font-size: 14pt;">
+                                <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                                <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
+                                <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
+                            </div>
+                            <table width="100%" cellspacing="2" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
+                                ${generateGridRows(batchChunk)}
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             </div>
         `;
 
-        const opt = {
-            margin: 0, // Zero margin for full page fit
-            filename: `Attendance_${batch.batchId}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-        };
+        // PDF HTML
+        htmlPagesForPdf += `
+            <div style="${pageBreakPdf} width: 8in; padding: 0.1in; background: white;">
+                <div style="border: 7.5pt solid black; min-height: 10in; padding: 10pt;">
+                    <div style="text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 10pt;">
+                         <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
+                         <p style="margin: 0;">Batch ID: ${batch.batchId}</p>
+                         <p style="margin: 0;">Job Role: ${batch.jobRole}</p>
+                    </div>
+                    <table width="100%" cellspacing="5" style="table-layout: fixed;">
+                        ${generateGridRows(batchChunk)}
+                    </table>
+                </div>
+            </div>
+        `;
+    });
 
-        html2pdf().set(opt).from(element).save();
-    }
-
-    async function generateWordDoc(isPdf = false) {
-        const selectedBatchId = wordFilterBatch.value;
-        if (!selectedBatchId) return;
-
-        const batch = state.batches.find(b => b.batchId === selectedBatchId);
-        if (!batch) { alert('Batch data not found.'); return; }
-
-        // Fetch and Group Evidence Photos from Firestore
-        const photoGroups = {
-            'Theory': [],
-            'Practical': [],
-            'Viva': [],
-            'Group': []
-        };
-
-        try {
-            const q = query(collection(db, "assessments"), where("batchId", "==", selectedBatchId));
-            const snapshot = await getDocs(q);
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.photos && Array.isArray(data.photos)) {
-                    const type = data.type || 'Unknown';
-                    if (photoGroups[type]) {
-                        photoGroups[type].push(...data.photos);
-                    }
-                }
-            });
-        } catch (err) {
-            console.error("Error fetching photos for Word report:", err);
-            alert("Error fetching photos from cloud.");
+    try {
+        if (isPdf) {
+            const element = document.createElement('div');
+            element.innerHTML = htmlPagesForPdf;
+            const opt = {
+                margin: 0,
+                filename: `Evidence_Report_${batch.batchId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 1.5, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            if (isBulk) return await html2pdf().set(opt).from(element).output('blob');
+            html2pdf().set(opt).from(element).save();
             return;
         }
 
-        // Combine photos in mandated order: Theory -> Practical -> Viva -> Group
-        const orderedPhotos = [
-            ...photoGroups['Theory'],
-            ...photoGroups['Practical'],
-            ...photoGroups['Viva'],
-            ...photoGroups['Group']
-        ];
-
-        if (orderedPhotos.length === 0) {
-            alert('No photos found for this batch!');
-            return;
-        }
-
-        // Limit to 6 photos for the single-page layout
-        const photosToUse = orderedPhotos.slice(0, 6);
-
-        // Generate HTML for Word
-        // MSO Header/Footer Implementation
-        try {
-            console.log('Generating Word Doc...');
-
-            const htmlContent = `
+        const htmlContent = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head>
-                <meta charset="utf-8">
-                <title>Evidence Report</title>
+            <head><meta charset="utf-8">
                 <style>
-                    /* Page Setup - Zero Tolerance A4 */
-                    @page Section1 {
-                        size: A4;
-                        margin: 0.3in; 
-                        mso-header-margin: 0.1in; 
-                        mso-footer-margin: 0.1in;
-                        mso-page-orientation: portrait;
-                    }
-                    div.Section1 { 
-                        page: Section1;
-                        mso-element:header;
-                    }
-                    
-                    body { 
-                        font-family: 'Calibri', 'Arial', sans-serif; 
-                        margin: 0;
-                        padding: 0;
-                        mso-line-height-rule: exactly;
-                    }
-
-                    .header-content {
-                        text-align: center;
-                        margin-bottom: 0pt; /* ZERO margin */
-                        font-weight: bold;
-                        font-size: 14pt;
-                        line-height: 1.0;
-                    }
-
-                    .main-table {
-                        border-collapse: collapse;
-                        table-layout: fixed;
-                        margin-bottom: -100pt; /* ZERO TOLERANCE PULL-UP */
-                    }
+                    @page Section1 { size: A4; margin: 0.3in; mso-page-orientation: portrait; }
+                    body { font-family: Calibri, Arial, sans-serif; }
                 </style>
             </head>
-            <body>
-                <div class="Section1">
-                    <!-- Tight 9.8in height to guarantee single page with 2.82in photos -->
-                    <table class="main-table" width="100%" height="9.8in" cellspacing="0" cellpadding="0" style="height: 9.8in; mso-padding-alt: 0 0 0 0;">
-                        <tr>
-                            <td height="9.8in" style="border: 6pt solid black; padding: 2pt; vertical-align: top; text-align: center; height: 9.8in;">
-                                
-                                <div class="header-content">
-                                    <p style="margin: 0; padding: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                    <p style="margin: 0; padding: 0;">Batch ID: ${batch.batchId}</p>
-                                    <p style="margin: 0; padding: 0;">Job Role: ${batch.jobRole}</p>
-                                </div>
+            <body>${htmlPagesForWord}</body></html>
+        `;
 
-                                <table width="100%" cellspacing="2" cellpadding="0" style="margin: 0 auto; table-layout: fixed;">
-                                    ${generateGridRows(photosToUse)}
-                                </table>
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+        if (isBulk) return blob;
 
-                            </td>
-                        </tr>
-                    </table>
-                    <!-- Hidden Trailing Paragraph - Maximum Deletion -->
-                    <p style="font-size: 1pt; line-height: 1pt; margin: 0; padding: 0; display: none; mso-hide: all; height: 0; overflow: hidden; mso-element:header;">&nbsp;</p>
-                </div>
-            </body>
-            </html>
-            `;
-
-            if (isPdf) {
-                // PDF Generation - Version 52.0 (Fixing Double Border & 2-Page Spill)
-                const element = document.createElement('div');
-                element.style.width = '8.27in';
-                element.style.background = 'white';
-
-                // Construct a CLEAN HTML snippet specifically for PDF
-                element.innerHTML = `
-                    <div style="width: 8.27in; padding: 0.3in; background: white; color: black; font-family: Calibri, Arial, sans-serif;">
-                        <div style="width: 100%; border: 7.5pt solid black; min-height: 10.6in; padding: 10pt; box-sizing: border-box;">
-                            <div style="text-align: center; margin-bottom: 20pt; font-weight: bold; font-size: 14pt; color: black !important;">
-                                <p style="margin: 0; padding: 1pt;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
-                                <p style="margin: 0; padding: 1pt;">Batch ID: ${batch.batchId}</p>
-                                <p style="margin: 0; padding: 1pt;">Job Role: ${batch.jobRole}</p>
-                            </div>
-                            <table width="100%" cellspacing="5" cellpadding="0" style="table-layout: fixed; margin: 0 auto;">
-                                ${generateGridRows(photosToUse)}
-                            </table>
-                        </div>
-                    </div>
-                `;
-
-                // Set EXACT image dimensions for PDF - REMOVED REPEAT BORDER
-                const imgs = element.querySelectorAll('img');
-                imgs.forEach(img => {
-                    img.style.width = '3.33in';
-                    img.style.height = '2.82in';
-                    img.style.display = 'block';
-                    img.style.margin = '0 auto';
-                    // NO EXTRA BORDER HERE - It's already in generateGridRows
-                });
-
-                const opt = {
-                    margin: 0,
-                    filename: `Evidence_Report_${batch.batchId}.pdf`,
-                    image: { type: 'jpeg', quality: 1.0 },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        logging: false
-                    },
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
-
-                html2pdf().set(opt).from(element).save();
-                return;
-            }
-
-            const blob = new Blob(['\ufeff', htmlContent], {
-                type: 'application/msword'
-            });
-
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Evidence_Report_${selectedBatchId}.doc`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Success Feedback
-            console.log('Download triggered');
-        } catch (err) {
-            console.error(err);
-            alert('Error generating report: ' + err.message);
-        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Evidence_Report_${batch.batchId}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (err) {
+        console.error(err);
+        return null;
     }
+}
 
-    function generateGridRows(photos) {
-        let rows = '';
-        for (let i = 0; i < photos.length; i += 2) {
-            const p1 = photos[i];
-            const p2 = photos[i + 1];
-
-            rows += '<tr>';
-
-            // Version 40.0 - EXACT dimensions: 3.33in x 2.82in
-            rows += '<td align="center" style="padding: 1pt;">';
-            rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
-            rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-            rows += `<img src="${p1}" width="320" height="270" style="width:3.33in; height:2.82in; display:block;">`;
-            rows += '</td></tr></table>';
-            rows += '</td>';
-
-            if (p2) {
-                // Version 40.0 - EXACT dimensions: 3.33in x 2.82in
-                rows += '<td align="center" style="padding: 1pt;">';
-                rows += '<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 4.5pt solid black; margin: 0 auto;">';
-                rows += '<tr><td style="padding: 0; margin: 0; line-height: 0; mso-line-height-rule: exactly;">';
-                rows += `<img src="${p2}" width="320" height="270" style="width:3.33in; height:2.82in; display:block;">`;
-                rows += '</td></tr></table>';
-                rows += '</td>';
+function generateGridRows(photos) {
+    let rows = '';
+    for (let i = 0; i < photos.length; i += 2) {
+        rows += '<tr>';
+        for (let j = 0; j < 2; j++) {
+            const p = photos[i + j];
+            if (p) {
+                rows += `<td align="center" style="padding: 2pt;">
+                    <div style="border: 4pt solid black; line-height: 0;">
+                        <img src="${p}" style="width: 3.3in; height: 2.8in; object-fit: cover;">
+                    </div>
+                </td>`;
             } else {
                 rows += '<td></td>';
             }
-            rows += '</tr>';
         }
-        return rows;
+        rows += '</tr>';
     }
+    return rows;
+}
+
+async function generateBulkEvidenceZip() {
+    const selected = document.querySelectorAll('.batch-select:checked');
+    if (selected.length === 0) { alert('Select at least one batch.'); return; }
+
+    const btn = document.getElementById('bulk-download-evidence-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating ZIP...';
+
+    const zip = new JSZip();
+    try {
+        for (let i = 0; i < selected.length; i++) {
+            const bId = selected[i].dataset.id;
+            btn.textContent = `Evidence ${i + 1}/${selected.length}...`;
+            const blob = await generateWordDoc(true, bId, true);
+            if (blob) zip.file(`Evidence_Report_${bId}.pdf`, blob);
+        }
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `Evidence_Reports_${Date.now()}.zip`;
+        link.click();
+    } catch (e) { console.error(e); }
+    btn.disabled = false;
+    btn.textContent = '📁 Evidence ZIP';
 }
 
 async function handleBulkBatchImport(e) {
@@ -1261,9 +1229,8 @@ async function handleBulkBatchImport(e) {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
 
-        // Convert to JSON (rows of arrays)
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        const rows = jsonData.slice(1); // skip header
+        const rows = jsonData.slice(1);
 
         let successCount = 0;
         let errorCount = 0;
@@ -1272,19 +1239,15 @@ async function handleBulkBatchImport(e) {
         importBtn.disabled = true;
         importBtn.textContent = 'Importing...';
 
-        // Calculate starting SR for this SSC
         const filteredBatches = state.batches.filter(b => b.ssc === ssc);
         let currentMaxSr = filteredBatches.reduce((max, b) => Math.max(max, parseInt(b.sr) || 0), 0);
 
         for (const row of rows) {
-            // Check if row has enough columns (SR, Date, Month, Job Role, Batch ID)
             if (row.length < 5) continue;
-
             const [srInput, dateVal, monthVal, jobRole, batchId, skillHub] = row;
-
             if (batchId && jobRole) {
                 try {
-                    currentMaxSr++; // Auto-increment SR
+                    currentMaxSr++;
                     const batchData = {
                         sr: String(currentMaxSr),
                         ssc: ssc,
@@ -1297,37 +1260,27 @@ async function handleBulkBatchImport(e) {
                     };
                     await addDoc(collection(db, "batches"), batchData);
                     successCount++;
-                } catch (err) {
-                    console.error("Bulk Import Error for row:", row, err);
-                    errorCount++;
-                }
+                } catch (err) { errorCount++; }
             }
         }
-
         await syncData();
         renderBatchTable();
-        alert(`Bulk Import Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
-
+        alert(`Import Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
         importBtn.disabled = false;
         importBtn.textContent = 'Bulk Import (Excel/CSV)';
-        e.target.value = ''; // Reset input
+        e.target.value = '';
     };
-
     reader.readAsArrayBuffer(file);
 }
 
 function downloadSampleTemplate() {
     const data = [
         ["SR", "Date", "Month", "Job Role", "Batch ID", "Skill Hub"],
-        ["1", "2026-02-23", "2026-02", "Electrician", "BATCH_ELECT01", "Main Center"],
-        ["2", "2026-02-24", "2026-02", "Plumber", "BATCH_PLUMB01", "South Center"]
+        ["1", "2026-02-23", "2026-02", "Electrician", "BATCH_ELECT01", "Main Center"]
     ];
-
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Batches");
-
-    // XLSX.writeFile will trigger browser download
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
     XLSX.writeFile(wb, "Batch_Import_Template.xlsx");
 }
 

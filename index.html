@@ -153,7 +153,11 @@
                                     </button>
                                     <button class="action-btn primary hidden" id="bulk-download-pdf-btn"
                                         style="margin-right: 0.5rem; background: #6366f1;">
-                                        📦 Bulk Download PDF (ZIP)
+                                        📋 Attendance ZIP
+                                    </button>
+                                    <button class="action-btn primary hidden" id="bulk-download-evidence-btn"
+                                        style="margin-right: 0.5rem; background: #8b5cf6;">
+                                        📁 Evidence ZIP
                                     </button>
                                     <button class="action-btn primary hidden" id="add-batch-btn">
                                         + Create Batch
@@ -312,30 +316,47 @@
                                     </svg>
                                     <span>Word Report Generator</span>
                                 </div>
-                                <div class="section-actions">
+                                <div class="section-actions" style="gap: 0.5rem; flex-wrap: wrap;">
                                     <select id="word-filter-ssc"
-                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; margin-right: 1rem;">
+                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none; margin-right: 0.5rem; min-width: 200px;">
                                         <option value="">Select SSC</option>
                                     </select>
-                                    <select id="word-filter-batch"
-                                        style="padding: 0.5rem 1rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; color: white; outline: none;"
-                                        disabled>
-                                        <option value="">Select Batch</option>
-                                    </select>
+                                    <button class="action-btn primary hidden" id="bulk-word-zip-btn"
+                                        style="background: #2563eb;">
+                                        📄 Bulk Word (ZIP)
+                                    </button>
+                                    <button class="action-btn primary hidden" id="bulk-pdf-zip-btn"
+                                        style="background: #e11d48;">
+                                        📕 Bulk PDF (ZIP)
+                                    </button>
+                                    <button class="action-btn primary hidden" id="bulk-attendance-zip-btn"
+                                        style="background: #9333ea;">
+                                        📋 Bulk Attendance (ZIP)
+                                    </button>
                                 </div>
                             </div>
 
-                            <div id="word-preview-container"
-                                style="text-align: center; color: var(--text-muted); padding: 3rem; min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                <p>Select a Batch to generate the Evidence Report.</p>
-                                <button id="generate-word-btn" class="action-btn primary"
-                                    style="margin-top: 1.5rem; display: none; background: #2563eb;">
-                                    Download Word Document
-                                </button>
-                                <button id="download-attendance-btn" class="action-btn accent"
-                                    style="margin-top: 1rem; display: none; background: #9333ea;">
-                                    Download Attendance PDF
-                                </button>
+                            <div id="word-batch-table-container" class="table-container" style="margin-top: 2rem;">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;"><input type="checkbox"
+                                                    id="select-all-word-batches"></th>
+                                            <th>Batch ID</th>
+                                            <th>Job Role</th>
+                                            <th>Skill Hub</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="word-batch-table-body">
+                                        <tr>
+                                            <td colspan="5"
+                                                style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                                                Select a Sector Skill Council to view batches for report generation.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
