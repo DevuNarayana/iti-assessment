@@ -16,7 +16,7 @@ import {
     deleteBatch,          // Exported for window
     deleteEvidence,       // Should be in admin, assumed created or reused
     downloadSingleQR
-} from './js/admin.js';
+} from './js/admin.js?v=119.0';
 import {
     renderAssessorTasks,
     initAssessorListeners,
