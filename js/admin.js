@@ -71,6 +71,9 @@ export function renderBatchTable() {
     }
 
     const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+    // Sort numerically by SR
+    filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
+
     if (batchCount) batchCount.textContent = filteredBatches.length;
 
     if (filteredBatches.length === 0) {
