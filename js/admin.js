@@ -8,57 +8,140 @@ import { showError } from './utils.js';
 export function updateGlobalSscDropdown() {
     const globalBatchSscSelect = document.getElementById('global-batch-ssc');
     const globalBatchSectorSelect = document.getElementById('global-batch-sector');
+    const sectorMgmtSscSelect = document.getElementById('sector-management-ssc');
     const batchSectorModalSelect = document.getElementById('batch-sector');
     const openCreateBatchBtn = document.getElementById('add-batch-btn');
-    if (!globalBatchSscSelect) return;
-
-    const currentVal = globalBatchSscSelect.value;
-    globalBatchSscSelect.innerHTML = '<option value="" disabled selected>Select Sector Skill Council</option>';
-    state.sscs.forEach(ssc => {
-        const option = document.createElement('option');
-        option.value = ssc.name;
-        option.textContent = ssc.name;
-        option.style.color = 'black';
-        globalBatchSscSelect.appendChild(option);
-    });
-
-    if (!currentVal) {
-        if (openCreateBatchBtn) openCreateBatchBtn.classList.add('hidden');
-        if (globalBatchSectorSelect) {
-            globalBatchSectorSelect.innerHTML = '<option value="">Select Sector</option>';
-            globalBatchSectorSelect.disabled = true;
-        }
-    } else {
-        globalBatchSscSelect.value = currentVal;
-        if (openCreateBatchBtn) openCreateBatchBtn.classList.remove('hidden');
-        
-        // Populate Sector Dropdowns
-        const selectedSscObj = state.sscs.find(s => s.name === currentVal);
-        const sectors = selectedSscObj?.sectors || [];
-        
-        const populateSectors = (el) => {
-            if (!el) return;
-            el.innerHTML = '<option value="">Select Sector</option>';
-            sectors.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
-                el.appendChild(opt);
-            });
-            el.disabled = sectors.length === 0;
-        };
-
-        populateSectors(globalBatchSectorSelect);
-        populateSectors(batchSectorModalSelect);
-    }
     
-    globalBatchSscSelect.onchange = () => {
-        updateGlobalSscDropdown();
-        renderBatchTable();
+    // Core populate function
+    const populateSsc = (el) => {
+        if (!el) return;
+        const currentVal = el.value;
+        el.innerHTML = '<option value="" disabled selected>Select Sector Skill Council</option>';
+        state.sscs.forEach(ssc => {
+            const option = document.createElement('option');
+            option.value = ssc.name;
+            option.textContent = ssc.name;
+            option.style.color = 'black';
+            el.appendChild(option);
+        });
+        if (currentVal) el.value = currentVal;
     };
 
-    if (globalBatchSectorSelect) {
-        globalBatchSectorSelect.onchange = () => renderBatchTable();
+    populateSsc(globalBatchSscSelect);
+    populateSsc(sectorMgmtSscSelect);
+
+    const populateSectors = (el, sectors) => {
+        if (!el) return;
+        const currentSelected = el.value;
+        el.innerHTML = '<option value="" disabled selected>Select Sector</option>';
+        sectors.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = opt.textContent = s;
+            el.appendChild(opt);
+        });
+        if (sectors.includes(currentSelected)) el.value = currentSelected;
+        el.disabled = sectors.length === 0;
+    };
+
+    // Handle Batches Section logic
+    if (globalBatchSscSelect) {
+        const selectedSsc = globalBatchSscSelect.value;
+        const sscObj = state.sscs.find(s => s.name === selectedSsc);
+        const sectors = sscObj?.sectors || [];
+        
+        populateSectors(globalBatchSectorSelect, sectors);
+        populateSectors(batchSectorModalSelect, sectors);
+
+        if (openCreateBatchBtn) {
+            if (selectedSsc && globalBatchSectorSelect && globalBatchSectorSelect.value) {
+                openCreateBatchBtn.classList.remove('hidden');
+            } else {
+                openCreateBatchBtn.classList.add('hidden');
+            }
+        }
+    }
+
+    // Assign onchange listeners once (if not already set)
+    if (globalBatchSscSelect && !globalBatchSscSelect.onchange) {
+        globalBatchSscSelect.onchange = () => {
+            updateGlobalSscDropdown();
+            renderBatchTable();
+        };
+    }
+    if (globalBatchSectorSelect && !globalBatchSectorSelect.onchange) {
+        globalBatchSectorSelect.onchange = () => {
+            updateGlobalSscDropdown();
+            renderBatchTable();
+        };
+    }
+    if (sectorMgmtSscSelect && !sectorMgmtSscSelect.onchange) {
+        sectorMgmtSscSelect.onchange = () => {
+            renderSectorsManagementTable();
+        };
+    }
+}
+
+export function renderSectorManagement() {
+    updateGlobalSscDropdown();
+    renderSectorsManagementTable();
+}
+
+export function renderSectorsManagementTable() {
+    const sscSelect = document.getElementById('sector-management-ssc');
+    const tableBody = document.getElementById('sectors-management-table-body');
+    const countEl = document.getElementById('sector-management-count');
+    const addBtn = document.getElementById('add-sector-tab-btn');
+
+    if (!sscSelect || !sscSelect.value) {
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select an SSC to manage sectors.</td></tr>';
+        if (countEl) countEl.textContent = 0;
+        addBtn?.classList.add('hidden');
+        return;
+    }
+
+    const sscName = sscSelect.value;
+    addBtn?.classList.remove('hidden');
+    const sscObj = state.sscs.find(s => s.name === sscName);
+    const sectors = sscObj?.sectors || [];
+    
+    if (countEl) countEl.textContent = sectors.length;
+
+    if (sectors.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No sectors found for this SSC.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = sectors.map((sector, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${sector}</td>
+            <td>
+                <button class="action-btn delete-sector-btn" data-ssc="${sscName}" data-sector="${sector}" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+
+    tableBody.querySelectorAll('.delete-sector-btn').forEach(btn => {
+        btn.onclick = () => deleteSector(btn.dataset.ssc, btn.dataset.sector);
+    });
+}
+
+export async function deleteSector(sscName, sectorName) {
+    if (!confirm(`Are you sure you want to delete sector "${sectorName}"?`)) return;
+
+    try {
+        const sscObj = state.sscs.find(s => s.name === sscName);
+        if (!sscObj) return;
+
+        const updatedSectors = sscObj.sectors.filter(s => s !== sectorName);
+        const { updateDoc } = await import('../firebase-config.js'); // Ensure we can update
+        await updateDoc(doc(db, "sscs", sscObj.id), { sectors: updatedSectors });
+        
+        await syncData();
+        renderSectorsManagementTable();
+    } catch (err) {
+        console.error("Delete Sector Error:", err);
+        alert("Failed to delete sector.");
     }
 }
 
@@ -725,16 +808,9 @@ export async function deleteEvidence(id) {
 export function initAdminListeners() {
     // Global SSC Batch Filter
     const globalBatchSscSelect = document.getElementById('global-batch-ssc');
+    const globalBatchSectorSelect = document.getElementById('global-batch-sector');
     if (globalBatchSscSelect) {
-        globalBatchSscSelect.addEventListener('change', () => {
-            renderBatchTable();
-            // Also enable/disable Add Batch button based on selection
-            const btn = document.getElementById('add-batch-btn');
-            if (btn) {
-                if (globalBatchSscSelect.value) btn.classList.remove('hidden');
-                else btn.classList.add('hidden');
-            }
-        });
+        // Handled in updateGlobalSscDropdown for onchange
     }
 
     // Modal Show/Hide Listeners
@@ -746,10 +822,23 @@ export function initAdminListeners() {
     });
 
     document.getElementById('add-batch-btn')?.addEventListener('click', () => {
+        const globalSector = document.getElementById('global-batch-sector')?.value;
+        const modalSector = document.getElementById('batch-sector');
+        if (globalSector && modalSector) {
+            modalSector.value = globalSector;
+        }
         document.getElementById('add-batch-modal').classList.remove('hidden');
     });
     document.getElementById('cancel-batch-btn')?.addEventListener('click', () => {
         document.getElementById('add-batch-modal').classList.add('hidden');
+    });
+
+    // Add Sector Modal Listeners
+    document.getElementById('add-sector-tab-btn')?.addEventListener('click', () => {
+        document.getElementById('add-sector-modal').classList.remove('hidden');
+    });
+    document.getElementById('cancel-sector-btn')?.addEventListener('click', () => {
+        document.getElementById('add-sector-modal').classList.add('hidden');
     });
 
     // Add SSC Form
@@ -759,14 +848,12 @@ export function initAdminListeners() {
             e.preventDefault();
             const sscName = document.getElementById('ssc-name').value.trim();
             const sscCode = document.getElementById('ssc-code').value.trim();
-            const sscSectorsRaw = document.getElementById('ssc-sectors').value.trim();
-            const sectorArray = sscSectorsRaw ? sscSectorsRaw.split('\n').map(s => s.trim()).filter(s => s !== '') : [];
             
             if (sscName && sscCode) {
                 await addDoc(collection(db, "sscs"), { 
                     name: sscName, 
                     code: sscCode, 
-                    sectors: sectorArray,
+                    sectors: [], // New flow: sectors added separately
                     createdAt: new Date().toISOString() 
                 });
                 await syncData();
@@ -774,6 +861,31 @@ export function initAdminListeners() {
                 updateGlobalSscDropdown();
                 document.getElementById('add-ssc-modal').classList.add('hidden');
                 e.target.reset();
+            }
+        });
+    }
+
+    // Add Sector Form
+    const addSectorForm = document.getElementById('add-sector-form');
+    if (addSectorForm) {
+        addSectorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sscName = document.getElementById('sector-management-ssc').value;
+            const sectorName = document.getElementById('new-sector-name').value.trim();
+
+            if (sscName && sectorName) {
+                const sscObj = state.sscs.find(s => s.name === sscName);
+                if (sscObj) {
+                    const updatedSectors = [...(sscObj.sectors || []), sectorName];
+                    const { updateDoc } = await import('../firebase-config.js');
+                    await updateDoc(doc(db, "sscs", sscObj.id), { sectors: updatedSectors });
+                    
+                    await syncData();
+                    renderSectorsManagementTable();
+                    updateGlobalSscDropdown();
+                    document.getElementById('add-sector-modal').classList.add('hidden');
+                    e.target.reset();
+                }
             }
         });
     }

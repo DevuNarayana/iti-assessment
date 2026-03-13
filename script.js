@@ -1,4 +1,4 @@
-// Version 132.0 - Fixed globalBatchSscSelect ReferenceError
+// Version 133.0 - Refactored Sector Management Hierarchy
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
@@ -11,6 +11,7 @@ import {
     renderAssessorCredentials,
     renderAdminEvidence,
     renderWordGenerator,
+    renderSectorManagement,
     initAdminListeners,
     deleteSsc,            // Exported for window
     deleteBatch,          // Exported for window
@@ -131,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (targetId === 'batches-section') renderBatchTable();
                     if (targetId === 'assessors-section') renderAssessorCredentials(); // Ensure this is exported/imported if used
                     if (targetId === 'ssc-section') renderSscTable();
+                    if (targetId === 'sectors-tab-section') renderSectorManagement();
                     if (targetId === 'evidence-section') renderAdminEvidence();
                     if (targetId === 'word-section') renderWordGenerator();
                 }
