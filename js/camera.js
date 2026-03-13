@@ -11,6 +11,7 @@ let currentAddress = null;
 let watchId = null;
 let lastGeocodeTime = 0;
 let isGeocoding = false;
+let clockInterval = null;
 let photoLimits = {
     'Theory': 2,
     'Practical': 2,
@@ -126,6 +127,18 @@ export function openCameraModal(type) {
     if (modal) modal.classList.remove('hidden');
     initCamera();
     updateGallery();
+
+    // Start Clock
+    if (clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(() => {
+        const liveDate = document.getElementById('live-date');
+        if (liveDate) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            liveDate.textContent = `${dateStr}, ${timeStr}`;
+        }
+    }, 1000);
 }
 
 export async function initCamera() {
@@ -179,6 +192,10 @@ export function stopCamera() {
     if (watchId) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
+    }
+    if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
     }
 }
 
@@ -248,22 +265,27 @@ export function initCameraListeners() {
 
         // 2. Text Setup
         context.fillStyle = 'white';
+        context.strokeStyle = 'rgba(0,0,0,0.8)';
+        context.lineWidth = 1;
         context.textAlign = 'right';
         context.shadowColor = 'rgba(0,0,0,0.5)';
-        context.shadowBlur = 2;
+        context.shadowBlur = 4;
 
         // Line 1: Date & Time (Top Line, Bold)
         context.font = '700 28px "Outfit", sans-serif';
+        context.strokeText(`${dateStr}, ${timeStr}`, rightMargin, startY);
         context.fillText(`${dateStr}, ${timeStr}`, rightMargin, startY);
 
         if (hasAddress) {
             // Line 2: Town/District/Area (Detailed)
             startY += 35;
             context.font = '500 22px "Outfit", sans-serif';
+            context.strokeText(currentAddress.town, rightMargin, startY);
             context.fillText(currentAddress.town, rightMargin, startY);
 
             // Line 3: State
             startY += 30;
+            context.strokeText(currentAddress.state, rightMargin, startY);
             context.fillText(currentAddress.state, rightMargin, startY);
         } else if (currentGeoLocation) {
             // Fallback: Geolocation
