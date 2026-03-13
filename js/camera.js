@@ -240,11 +240,11 @@ export function initCameraListeners() {
         const rightMargin = canvas.width - 30;
         let startY = canvas.height - (hasAddress ? 125 : 75);
 
-        // 1. Background Box (Dark Semi-transparent)
-        const boxWidth = 500;
-        const boxHeight = hasAddress ? 115 : 65;
-        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        context.fillRect(canvas.width - boxWidth - 10, canvas.height - boxHeight - 10, boxWidth, boxHeight);
+        // 1. Background Box (Removed as per request)
+        // const boxWidth = 500;
+        // const boxHeight = hasAddress ? 115 : 65;
+        // context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        // context.fillRect(canvas.width - boxWidth - 10, canvas.height - boxHeight - 10, boxWidth, boxHeight);
 
         // 2. Text Setup
         context.fillStyle = 'white';

@@ -1,4 +1,4 @@
-// Version 135.0 - Fixed Assessor Dashboard Layout
+// Version 136.0 - Removed GPS Overlay Background
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

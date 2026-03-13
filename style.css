@@ -998,14 +998,11 @@ select option {
     left: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 99px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
     z-index: 10;
-    border: 1px solid var(--glass-border);
 }
 
 .gps-dot {
@@ -1031,13 +1028,11 @@ select option {
     left: 1rem;
     right: 1rem;
     padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
     border-radius: 12px;
     font-size: 0.85rem;
     color: white;
     z-index: 10;
-    border: 1px solid var(--glass-border);
+    text-align: right;
 }
 
 @keyframes pulse {
