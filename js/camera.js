@@ -325,7 +325,9 @@ async function submitPhotos() {
     submitBtn.textContent = 'Preparing...';
 
     try {
-        const batchId = state.loggedInUser?.batch?.batchId || 'Default';
+        const batch = state.loggedInUser?.batch;
+        const batchId = batch?.batchId || 'Default';
+        const ssc = batch?.ssc || '';
 
         const uploadPromises = capturedPhotos.map(async (photoData, i) => {
             submitBtn.textContent = `Uploading ${i + 1}/${capturedPhotos.length}...`;
@@ -335,10 +337,6 @@ async function submitPhotos() {
 
             const isPdf = photoData.startsWith('data:application/pdf');
             const resourceType = isPdf ? 'raw' : 'image';
-
-            // For RAW uploads, we might need to ensure the filename extension is preserved
-            // but for base64 uploads, Cloudinary generates a name. 
-            // We'll trust Cloudinary's raw handling.
 
             const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
                 method: 'POST',
@@ -359,6 +357,7 @@ async function submitPhotos() {
 
         const assessmentData = {
             batchId: batchId,
+            ssc: ssc,
             type: cameraType,
             photos: uploadedUrls,
             timestamp: new Date().toISOString(),

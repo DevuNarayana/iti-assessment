@@ -884,19 +884,31 @@ export function renderWordGenerator() {
             const statusMap = {}; // { batchId: { photos: 0, hasAttend: false } }
             
             try {
-                const q = query(collection(db, "assessments"), where("ssc", "==", selectedSsc));
-                const snap = await getDocs(q);
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.batchId) {
-                        if (!statusMap[data.batchId]) statusMap[data.batchId] = { photos: 0, hasAttend: false };
-                        if (data.type === 'Attendance') {
-                            statusMap[data.batchId].hasAttend = true;
-                        } else {
-                            const count = (data.photos ? data.photos.length : 0);
-                            statusMap[data.batchId].photos += count;
+                // Firestore "in" limit is 30. Handle chunks.
+                const batchIds = batches.map(b => b.batchId);
+                const chunks = [];
+                for (let i = 0; i < batchIds.length; i += 30) {
+                    chunks.push(batchIds.slice(i, i + 30));
+                }
+
+                const queryPromises = chunks.map(chunk => 
+                    getDocs(query(collection(db, "assessments"), where("batchId", "in", chunk)))
+                );
+                
+                const snapshots = await Promise.all(queryPromises);
+                snapshots.forEach(snap => {
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.batchId) {
+                            if (!statusMap[data.batchId]) statusMap[data.batchId] = { photos: 0, hasAttend: false };
+                            if (data.type === 'Attendance') {
+                                statusMap[data.batchId].hasAttend = true;
+                            } else {
+                                const count = (data.photos ? data.photos.length : 0);
+                                statusMap[data.batchId].photos += count;
+                            }
                         }
-                    }
+                    });
                 });
             } catch (err) { console.error("Error fetching status:", err); }
 
@@ -927,16 +939,17 @@ export function renderWordGenerator() {
                     icon = '🔴';
                 }
 
-                const rowStyle = color !== '#ffffff' ? `color: ${color}; font-weight: 600;` : ''; 
+                // Apply color to each TD for maximum specificity
+                const cellStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
                 const statusHtml = `<span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span>`;
 
                 return `
-                    <tr style="${rowStyle}">
+                    <tr style="${cellStyle}">
                         <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}"></td>
-                        <td style="font-weight: bold;">${batch.batchId}</td>
-                        <td>${batch.jobRole}</td>
-                        <td>${batch.skillHub || 'N/A'}</td>
-                        <td>${statusHtml}</td>
+                        <td style="${cellStyle}">${batch.batchId}</td>
+                        <td style="${cellStyle}">${batch.jobRole}</td>
+                        <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
+                        <td style="${cellStyle}">${statusHtml}</td>
                         <td>
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
