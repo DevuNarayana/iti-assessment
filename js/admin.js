@@ -925,18 +925,23 @@ export function renderWordGenerator() {
                 let statusText = 'Pending';
                 let icon = '⚪';
 
+                let statusType = 'pending';
+
                 if (hasEnoughPhotos && hasAttend) {
                     color = '#22c55e'; // Green
                     statusText = `Ready (${stats.photos} Ph + Attend)`;
                     icon = '🟢';
+                    statusType = 'ready';
                 } else if (hasEnoughPhotos) {
                     color = '#facc15'; // Yellow
                     statusText = `Photos Only (${stats.photos})`;
                     icon = '🟡';
+                    statusType = 'photos';
                 } else if (hasAttend) {
                     color = '#ef4444'; // Red
                     statusText = 'Attendance Only';
                     icon = '🔴';
+                    statusType = 'attend';
                 }
 
                 // Apply color to each TD for maximum specificity
@@ -945,7 +950,7 @@ export function renderWordGenerator() {
 
                 return `
                     <tr style="${cellStyle}">
-                        <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}"></td>
+                        <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
                         <td style="${cellStyle}">${batch.batchId}</td>
                         <td style="${cellStyle}">${batch.jobRole}</td>
                         <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
@@ -960,6 +965,23 @@ export function renderWordGenerator() {
                     </tr>
                 `;
             }).join('');
+
+            // Quick Select Listeners
+            const selectByStatus = (type) => {
+                const cbxs = document.querySelectorAll('.word-batch-select');
+                cbxs.forEach(cb => {
+                    cb.checked = (cb.dataset.statusType === type);
+                });
+            };
+
+            document.getElementById('sel-green-btn')?.addEventListener('click', () => selectByStatus('ready'));
+            document.getElementById('sel-yellow-btn')?.addEventListener('click', () => selectByStatus('photos'));
+            document.getElementById('sel-red-btn')?.addEventListener('click', () => selectByStatus('attend'));
+            document.getElementById('sel-clear-btn')?.addEventListener('click', () => {
+                document.querySelectorAll('.word-batch-select').forEach(cb => cb.checked = false);
+                const selectAll = document.getElementById('select-all-word-batches');
+                if (selectAll) selectAll.checked = false;
+            });
         };
 
         // Select All Handler

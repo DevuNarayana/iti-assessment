@@ -18,7 +18,7 @@ import {
     downloadSingleQR,
     generateWordDoc,
     generateAttendanceReport
-} from './js/admin.js?v=127.0';
+} from './js/admin.js?v=128.0';
 import {
     renderAssessorTasks,
     initAssessorListeners,
