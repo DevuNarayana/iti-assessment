@@ -880,21 +880,22 @@ export function renderWordGenerator() {
                 return;
             }
 
-            // Fetch summary of assessments for these batches to show "Completed" status
-            const batchIds = batches.map(b => b.batchId);
-            const statusMap = {};
+            // Fetch summary of assessments for these batches to show "Status"
+            const statusMap = {}; // { batchId: { photos: 0, hasAttend: false } }
             
-            // We use simple query to check if there is ANY assessment for each batch
-            // For efficiency, in a real large app we'd have a counter or specific field, 
-            // but here we'll do a focused fetch or rely on what's available.
             try {
                 const q = query(collection(db, "assessments"), where("ssc", "==", selectedSsc));
                 const snap = await getDocs(q);
                 snap.forEach(doc => {
                     const data = doc.data();
                     if (data.batchId) {
-                        const count = (data.photos ? data.photos.length : 0);
-                        statusMap[data.batchId] = (statusMap[data.batchId] || 0) + count;
+                        if (!statusMap[data.batchId]) statusMap[data.batchId] = { photos: 0, hasAttend: false };
+                        if (data.type === 'Attendance') {
+                            statusMap[data.batchId].hasAttend = true;
+                        } else {
+                            const count = (data.photos ? data.photos.length : 0);
+                            statusMap[data.batchId].photos += count;
+                        }
                     }
                 });
             } catch (err) { console.error("Error fetching status:", err); }
@@ -904,12 +905,30 @@ export function renderWordGenerator() {
             bulkAttendanceBtn.classList.remove('hidden');
 
             wordTableBody.innerHTML = batches.map(batch => {
-                const photoCount = statusMap[batch.batchId] || 0;
-                const isCompleted = photoCount > 0;
-                const rowStyle = isCompleted ? 'color: #facc15; font-weight: 600;' : ''; // Yellow text if completed
-                const statusHtml = isCompleted 
-                    ? `<span style="color: #facc15; font-size: 11px;">🟡 Completed (${photoCount})</span>`
-                    : `<span style="color: #94a3b8; font-size: 11px;">⚪ Pending</span>`;
+                const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
+                const hasEnoughPhotos = stats.photos >= 6;
+                const hasAttend = stats.hasAttend;
+
+                let color = '#ffffff'; // Default
+                let statusText = 'Pending';
+                let icon = '⚪';
+
+                if (hasEnoughPhotos && hasAttend) {
+                    color = '#22c55e'; // Green
+                    statusText = `Ready (${stats.photos} Ph + Attend)`;
+                    icon = '🟢';
+                } else if (hasEnoughPhotos) {
+                    color = '#facc15'; // Yellow
+                    statusText = `Photos Only (${stats.photos})`;
+                    icon = '🟡';
+                } else if (hasAttend) {
+                    color = '#ef4444'; // Red
+                    statusText = 'Attendance Only';
+                    icon = '🔴';
+                }
+
+                const rowStyle = color !== '#ffffff' ? `color: ${color}; font-weight: 600;` : ''; 
+                const statusHtml = `<span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span>`;
 
                 return `
                     <tr style="${rowStyle}">
