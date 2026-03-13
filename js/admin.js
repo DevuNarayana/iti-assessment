@@ -859,10 +859,10 @@ export function renderWordGenerator() {
             wordFilterSsc.appendChild(opt);
         });
 
-        wordFilterSsc.onchange = () => {
+        wordFilterSsc.onchange = async () => {
             const selectedSsc = wordFilterSsc.value;
             if (!selectedSsc) {
-                wordTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council to view batches for report generation.</td></tr>`;
+                wordTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council to view batches for report generation.</td></tr>`;
                 bulkWordBtn.classList.add('hidden');
                 bulkPdfBtn.classList.add('hidden');
                 bulkAttendanceBtn.classList.add('hidden');
@@ -873,32 +873,61 @@ export function renderWordGenerator() {
             batches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
 
             if (batches.length === 0) {
-                wordTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for ${selectedSsc}.</td></tr>`;
+                wordTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for ${selectedSsc}.</td></tr>`;
                 bulkWordBtn.classList.add('hidden');
                 bulkPdfBtn.classList.add('hidden');
                 bulkAttendanceBtn.classList.add('hidden');
                 return;
             }
 
+            // Fetch summary of assessments for these batches to show "Completed" status
+            const batchIds = batches.map(b => b.batchId);
+            const statusMap = {};
+            
+            // We use simple query to check if there is ANY assessment for each batch
+            // For efficiency, in a real large app we'd have a counter or specific field, 
+            // but here we'll do a focused fetch or rely on what's available.
+            try {
+                const q = query(collection(db, "assessments"), where("ssc", "==", selectedSsc));
+                const snap = await getDocs(q);
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.batchId) {
+                        const count = (data.photos ? data.photos.length : 0);
+                        statusMap[data.batchId] = (statusMap[data.batchId] || 0) + count;
+                    }
+                });
+            } catch (err) { console.error("Error fetching status:", err); }
+
             bulkWordBtn.classList.remove('hidden');
             bulkPdfBtn.classList.remove('hidden');
             bulkAttendanceBtn.classList.remove('hidden');
 
-            wordTableBody.innerHTML = batches.map(batch => `
-                <tr>
-                    <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}"></td>
-                    <td style="font-weight: bold;">${batch.batchId}</td>
-                    <td>${batch.jobRole}</td>
-                    <td>${batch.skillHub || 'N/A'}</td>
-                    <td>
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px;">Word</button>
-                            <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px;">PDF</button>
-                            <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px;">Attend</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            wordTableBody.innerHTML = batches.map(batch => {
+                const photoCount = statusMap[batch.batchId] || 0;
+                const isCompleted = photoCount > 0;
+                const rowStyle = isCompleted ? 'color: #facc15; font-weight: 600;' : ''; // Yellow text if completed
+                const statusHtml = isCompleted 
+                    ? `<span style="color: #facc15; font-size: 11px;">🟡 Completed (${photoCount})</span>`
+                    : `<span style="color: #94a3b8; font-size: 11px;">⚪ Pending</span>`;
+
+                return `
+                    <tr style="${rowStyle}">
+                        <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}"></td>
+                        <td style="font-weight: bold;">${batch.batchId}</td>
+                        <td>${batch.jobRole}</td>
+                        <td>${batch.skillHub || 'N/A'}</td>
+                        <td>${statusHtml}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
+                                <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px; color: white;">PDF</button>
+                                <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px; color: white;">Attend</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         };
 
         // Select All Handler
