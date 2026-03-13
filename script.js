@@ -1,4 +1,4 @@
-// Version 134.0 - Simplified Sector Creation with Prompt
+// Version 135.0 - Fixed Assessor Dashboard Layout
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
