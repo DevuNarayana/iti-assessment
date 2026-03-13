@@ -1,4 +1,4 @@
-// Version 86.0 - Modular Refactor
+// Version 130.0 - Sector Hierarchy Visibility Improvements
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

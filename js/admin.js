@@ -7,6 +7,8 @@ import { showError } from './utils.js';
 // Helper to populate global SSC dropdown
 export function updateGlobalSscDropdown() {
     const globalBatchSscSelect = document.getElementById('global-batch-ssc');
+    const globalBatchSectorSelect = document.getElementById('global-batch-sector');
+    const batchSectorModalSelect = document.getElementById('batch-sector');
     const openCreateBatchBtn = document.getElementById('add-batch-btn');
     if (!globalBatchSscSelect) return;
 
@@ -22,9 +24,41 @@ export function updateGlobalSscDropdown() {
 
     if (!currentVal) {
         if (openCreateBatchBtn) openCreateBatchBtn.classList.add('hidden');
+        if (globalBatchSectorSelect) {
+            globalBatchSectorSelect.innerHTML = '<option value="">Select Sector</option>';
+            globalBatchSectorSelect.disabled = true;
+        }
     } else {
         globalBatchSscSelect.value = currentVal;
         if (openCreateBatchBtn) openCreateBatchBtn.classList.remove('hidden');
+        
+        // Populate Sector Dropdowns
+        const selectedSscObj = state.sscs.find(s => s.name === currentVal);
+        const sectors = selectedSscObj?.sectors || [];
+        
+        const populateSectors = (el) => {
+            if (!el) return;
+            el.innerHTML = '<option value="">Select Sector</option>';
+            sectors.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                el.appendChild(opt);
+            });
+            el.disabled = sectors.length === 0;
+        };
+
+        populateSectors(globalBatchSectorSelect);
+        populateSectors(batchSectorModalSelect);
+    }
+    
+    globalBatchSscSelect.onchange = () => {
+        updateGlobalSscDropdown();
+        renderBatchTable();
+    };
+
+    if (globalBatchSectorSelect) {
+        globalBatchSectorSelect.onchange = () => renderBatchTable();
     }
 }
 
@@ -36,20 +70,24 @@ export function renderSscTable() {
     if (sscCount) sscCount.textContent = state.sscs.length;
 
     if (state.sscs.length === 0) {
-        sscTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No SSCs added yet.</td></tr>`;
+        sscTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No SSCs added yet.</td></tr>`;
         return;
     }
 
-    sscTableBody.innerHTML = state.sscs.map((ssc, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${ssc.name}</td>
-            <td>${ssc.code}</td>
-            <td>
-                <button class="action-btn delete-ssc-btn" data-id="${ssc.id}" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">Delete</button>
-            </td>
-        </tr>
-    `).join('');
+    sscTableBody.innerHTML = state.sscs.map((ssc, index) => {
+        const sectors = ssc.sectors ? ssc.sectors.join(', ') : 'None';
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${ssc.name}</td>
+                <td>${ssc.code}</td>
+                <td style="font-size: 0.85rem; color: #10b981;">${sectors}</td>
+                <td>
+                    <button class="action-btn delete-ssc-btn" data-id="${ssc.id}" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     document.querySelectorAll('.delete-ssc-btn').forEach(btn => {
         btn.addEventListener('click', () => deleteSsc(btn.dataset.id));
@@ -59,20 +97,23 @@ export function renderSscTable() {
 export function renderBatchTable() {
     const batchesTableBody = document.getElementById('batches-table-body');
     const batchCount = document.getElementById('batch-count');
-    const globalBatchSscSelect = document.getElementById('global-batch-ssc');
-
+    const globalBatchSectorSelect = document.getElementById('global-batch-sector');
     if (!batchesTableBody) return;
     const selectedSsc = globalBatchSscSelect ? globalBatchSscSelect.value : '';
+    const selectedSector = globalBatchSectorSelect ? globalBatchSectorSelect.value : '';
 
     if (!selectedSsc) {
-        batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
+        batchesTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
         if (batchCount) batchCount.textContent = 0;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         return;
     }
 
-    const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+    let filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+    if (selectedSector) {
+        filteredBatches = filteredBatches.filter(b => b.sector === selectedSector);
+    }
     // Sort numerically by SR
     filteredBatches.sort((a, b) => {
         const valA = parseInt(a.sr) || 0;
@@ -83,7 +124,7 @@ export function renderBatchTable() {
     if (batchCount) batchCount.textContent = filteredBatches.length;
 
     if (filteredBatches.length === 0) {
-        batchesTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
+        batchesTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         return;
@@ -99,6 +140,7 @@ export function renderBatchTable() {
             <td>${batch.day}</td>
             <td>${batch.month}</td>
             <td>${batch.ssc}</td>
+            <td style="color: #10b981; font-weight: 500;">${batch.sector || 'N/A'}</td>
             <td>${batch.jobRole}</td>
             <td>${batch.batchId}</td>
             <td>${batch.skillHub}</td>
@@ -330,16 +372,66 @@ function exportAllCredentials() {
     printWindow.document.close();
 }
 
-function handleAssessorSscChange() {
+export function renderAssessorCredentials() {
+    const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
+    const assessorFilterBatch = document.getElementById('assessor-filter-batch');
+    const container = document.getElementById('assessor-credentials-container');
+
+    if (assessorFilterSsc && assessorFilterSsc.options.length === 1) {
+        state.sscs.forEach(ssc => {
+            const opt = document.createElement('option');
+            opt.value = ssc.name;
+            opt.textContent = ssc.name;
+            assessorFilterSsc.appendChild(opt);
+        });
+        assessorFilterSsc.onchange = handleAssessorSscChange;
+    }
+
+    if (assessorFilterBatch.value && assessorFilterBatch.value !== "") {
+        renderAssessorCredentialsView();
+    } else {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Date or Sector Skill Council and Batch to view login credentials.</div>';
+    }
+}
+
+export function handleAssessorSscChange() {
     const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
     const assessorFilterBatch = document.getElementById('assessor-filter-batch');
     const assessorFilterDate = document.getElementById('assessor-filter-date');
+    const assessorFilterSector = document.getElementById('assessor-filter-sector');
     const selectedSsc = assessorFilterSsc.value;
 
     // If SSC is selected, clear Date filter
     if (selectedSsc && assessorFilterDate) {
         assessorFilterDate.value = "";
     }
+
+    const sscObj = state.sscs.find(s => s.name === selectedSsc);
+    const sectors = sscObj?.sectors || [];
+    
+    assessorFilterSector.innerHTML = '<option value="">Select Sector</option>';
+    sectors.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        assessorFilterSector.appendChild(opt);
+    });
+    assessorFilterSector.disabled = sectors.length === 0;
+
+    assessorFilterSector.onchange = () => {
+        assessorFilterBatch.innerHTML = '<option value="">Select Batch</option>';
+        const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc && (!assessorFilterSector.value || b.sector === assessorFilterSector.value));
+        if (filteredBatches.length > 0) {
+            assessorFilterBatch.disabled = false;
+            filteredBatches.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.batchId; opt.textContent = b.batchId;
+                assessorFilterBatch.appendChild(opt);
+            });
+        } else {
+            assessorFilterBatch.disabled = true;
+        }
+        renderAssessorCredentialsView();
+    };
 
     assessorFilterBatch.innerHTML = '<option value="">Select Batch</option>';
     assessorFilterBatch.disabled = true;
@@ -350,13 +442,11 @@ function handleAssessorSscChange() {
     }
 
     const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
-
-    if (filteredBatches.length > 0) {
+    if (filteredBatches.length > 0 && sectors.length === 0) {
         assessorFilterBatch.disabled = false;
         filteredBatches.forEach(b => {
             const opt = document.createElement('option');
-            opt.value = b.batchId;
-            opt.textContent = b.batchId;
+            opt.value = b.batchId; opt.textContent = b.batchId;
             assessorFilterBatch.appendChild(opt);
         });
     }
@@ -366,12 +456,14 @@ function handleAssessorSscChange() {
 
 function renderAssessorCredentialsView() {
     const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
+    const assessorFilterSector = document.getElementById('assessor-filter-sector');
     const assessorFilterBatch = document.getElementById('assessor-filter-batch');
     const assessorFilterDate = document.getElementById('assessor-filter-date');
     const credentialsContainer = document.getElementById('assessor-credentials-container');
     const printBtn = document.getElementById('print-credentials-btn');
 
     const selectedSsc = assessorFilterSsc ? assessorFilterSsc.value : "";
+    const selectedSector = assessorFilterSector ? assessorFilterSector.value : "";
     const selectedBatchId = assessorFilterBatch ? assessorFilterBatch.value : "";
     const selectedDate = assessorFilterDate ? assessorFilterDate.value : "";
 
@@ -494,9 +586,37 @@ export function renderAdminEvidence() {
 
 function handleSscChange() {
     const selectedSsc = document.getElementById('evidence-filter-ssc').value;
+    const filterSector = document.getElementById('evidence-filter-sector');
     const filterBatch = document.getElementById('evidence-filter-batch');
     const container = document.getElementById('evidence-grid');
     const countDisplay = document.getElementById('evidence-count');
+
+    const sscObj = state.sscs.find(s => s.name === selectedSsc);
+    const sectors = sscObj?.sectors || [];
+    
+    filterSector.innerHTML = '<option value="">Select Sector</option>';
+    sectors.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        filterSector.appendChild(opt);
+    });
+    filterSector.disabled = sectors.length === 0;
+    
+    filterSector.onchange = () => {
+        filterBatch.innerHTML = '<option value="">Select Batch</option>';
+        const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc && (!filterSector.value || b.sector === filterSector.value));
+        if (filteredBatches.length > 0) {
+            filterBatch.disabled = false;
+            filteredBatches.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.batchId; opt.textContent = b.batchId;
+                filterBatch.appendChild(opt);
+            });
+        } else {
+            filterBatch.disabled = true;
+        }
+        renderEvidenceGrid();
+    };
 
     filterBatch.innerHTML = '<option value="">Select Batch</option>';
     filterBatch.disabled = true;
@@ -506,18 +626,13 @@ function handleSscChange() {
     if (!selectedSsc) return;
 
     const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
-
-    if (filteredBatches.length > 0) {
+    if (filteredBatches.length > 0 && sectors.length === 0) {
         filterBatch.disabled = false;
         filteredBatches.forEach(b => {
             const opt = document.createElement('option');
-            opt.value = b.batchId;
-            opt.textContent = b.batchId;
+            opt.value = b.batchId; opt.textContent = b.batchId;
             filterBatch.appendChild(opt);
         });
-    } else {
-        filterBatch.innerHTML = '<option value="">No Batches Found</option>';
-        filterBatch.disabled = true;
     }
 }
 
@@ -658,8 +773,16 @@ export function initAdminListeners() {
             e.preventDefault();
             const sscName = document.getElementById('ssc-name').value.trim();
             const sscCode = document.getElementById('ssc-code').value.trim();
+            const sscSectorsRaw = document.getElementById('ssc-sectors').value.trim();
+            const sectorArray = sscSectorsRaw ? sscSectorsRaw.split('\n').map(s => s.trim()).filter(s => s !== '') : [];
+            
             if (sscName && sscCode) {
-                await addDoc(collection(db, "sscs"), { name: sscName, code: sscCode, createdAt: new Date().toISOString() });
+                await addDoc(collection(db, "sscs"), { 
+                    name: sscName, 
+                    code: sscCode, 
+                    sectors: sectorArray,
+                    createdAt: new Date().toISOString() 
+                });
                 await syncData();
                 renderSscTable();
                 updateGlobalSscDropdown();
@@ -675,6 +798,7 @@ export function initAdminListeners() {
         batchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const ssc = document.getElementById('global-batch-ssc').value;
+            const sector = document.getElementById('batch-sector').value;
             const sr = document.getElementById('batch-sr').value;
             const dateVal = document.getElementById('batch-day').value;
             const monthVal = document.getElementById('batch-month').value;
@@ -690,6 +814,7 @@ export function initAdminListeners() {
                 const batchData = {
                     sr: sr || String(nextSr),
                     ssc,
+                    sector,
                     batchId,
                     jobRole,
                     skillHub,
@@ -861,6 +986,19 @@ export function renderWordGenerator() {
 
         wordFilterSsc.onchange = async () => {
             const selectedSsc = wordFilterSsc.value;
+            const wordSectorFilter = document.getElementById('word-filter-sector');
+            
+            const sscObj = state.sscs.find(s => s.name === selectedSsc);
+            const sectors = sscObj?.sectors || [];
+            wordSectorFilter.innerHTML = '<option value="">Select Sector</option>';
+            sectors.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; opt.textContent = s;
+                wordSectorFilter.appendChild(opt);
+            });
+            wordSectorFilter.disabled = sectors.length === 0;
+            wordSectorFilter.onchange = () => wordFilterSsc.onchange();
+
             if (!selectedSsc) {
                 wordTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council to view batches for report generation.</td></tr>`;
                 bulkWordBtn.classList.add('hidden');
@@ -869,11 +1007,15 @@ export function renderWordGenerator() {
                 return;
             }
 
-            const batches = state.batches.filter(b => b.ssc === selectedSsc);
+            const selectedSector = wordSectorFilter.value;
+            let filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+            if (selectedSector) filteredBatches = filteredBatches.filter(b => b.sector === selectedSector);
+            
+            const batches = filteredBatches;
             batches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
 
             if (batches.length === 0) {
-                wordTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for ${selectedSsc}.</td></tr>`;
+                wordTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found.</td></tr>`;
                 bulkWordBtn.classList.add('hidden');
                 bulkPdfBtn.classList.add('hidden');
                 bulkAttendanceBtn.classList.add('hidden');
@@ -952,6 +1094,7 @@ export function renderWordGenerator() {
                     <tr style="${cellStyle}">
                         <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
                         <td style="${cellStyle}">${batch.batchId}</td>
+                        <td style="${cellStyle}; color: #10b981; font-weight: 500;">${batch.sector || 'N/A'}</td>
                         <td style="${cellStyle}">${batch.jobRole}</td>
                         <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
                         <td style="${cellStyle}">${statusHtml}</td>
