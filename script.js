@@ -1,4 +1,4 @@
-// Version 131.0 - Fixed Duplicate Declaration Syntax Error
+// Version 132.0 - Fixed globalBatchSscSelect ReferenceError
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

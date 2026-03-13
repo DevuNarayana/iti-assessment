@@ -97,6 +97,7 @@ export function renderSscTable() {
 export function renderBatchTable() {
     const batchesTableBody = document.getElementById('batches-table-body');
     const batchCount = document.getElementById('batch-count');
+    const globalBatchSscSelect = document.getElementById('global-batch-ssc');
     const globalBatchSectorSelect = document.getElementById('global-batch-sector');
     if (!batchesTableBody) return;
     const selectedSsc = globalBatchSscSelect ? globalBatchSscSelect.value : '';
