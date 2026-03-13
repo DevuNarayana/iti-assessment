@@ -1,4 +1,4 @@
-// Version 133.0 - Refactored Sector Management Hierarchy
+// Version 134.0 - Simplified Sector Creation with Prompt
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

@@ -833,12 +833,24 @@ export function initAdminListeners() {
         document.getElementById('add-batch-modal').classList.add('hidden');
     });
 
-    // Add Sector Modal Listeners
-    document.getElementById('add-sector-tab-btn')?.addEventListener('click', () => {
-        document.getElementById('add-sector-modal').classList.remove('hidden');
-    });
-    document.getElementById('cancel-sector-btn')?.addEventListener('click', () => {
-        document.getElementById('add-sector-modal').classList.add('hidden');
+    // Add Sector Listener (Simple Prompt)
+    document.getElementById('add-sector-tab-btn')?.addEventListener('click', async () => {
+        const sscName = document.getElementById('sector-management-ssc').value;
+        if (!sscName) return;
+
+        const sectorName = prompt("Enter Sector Name:");
+        if (sectorName && sectorName.trim()) {
+            const sscObj = state.sscs.find(s => s.name === sscName);
+            if (sscObj) {
+                const updatedSectors = [...(sscObj.sectors || []), sectorName.trim()];
+                const { updateDoc } = await import('../firebase-config.js');
+                await updateDoc(doc(db, "sscs", sscObj.id), { sectors: updatedSectors });
+                
+                await syncData();
+                renderSectorsManagementTable();
+                updateGlobalSscDropdown();
+            }
+        }
     });
 
     // Add SSC Form
@@ -861,31 +873,6 @@ export function initAdminListeners() {
                 updateGlobalSscDropdown();
                 document.getElementById('add-ssc-modal').classList.add('hidden');
                 e.target.reset();
-            }
-        });
-    }
-
-    // Add Sector Form
-    const addSectorForm = document.getElementById('add-sector-form');
-    if (addSectorForm) {
-        addSectorForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const sscName = document.getElementById('sector-management-ssc').value;
-            const sectorName = document.getElementById('new-sector-name').value.trim();
-
-            if (sscName && sectorName) {
-                const sscObj = state.sscs.find(s => s.name === sscName);
-                if (sscObj) {
-                    const updatedSectors = [...(sscObj.sectors || []), sectorName];
-                    const { updateDoc } = await import('../firebase-config.js');
-                    await updateDoc(doc(db, "sscs", sscObj.id), { sectors: updatedSectors });
-                    
-                    await syncData();
-                    renderSectorsManagementTable();
-                    updateGlobalSscDropdown();
-                    document.getElementById('add-sector-modal').classList.add('hidden');
-                    e.target.reset();
-                }
             }
         });
     }
