@@ -912,9 +912,9 @@ export function renderWordGenerator() {
                 });
             } catch (err) { console.error("Error fetching status:", err); }
 
-            bulkWordBtn.classList.remove('hidden');
-            bulkPdfBtn.classList.remove('hidden');
-            bulkAttendanceBtn.classList.remove('hidden');
+            bulkWordBtn.classList.add('hidden');
+            bulkPdfBtn.classList.add('hidden');
+            bulkAttendanceBtn.classList.add('hidden');
 
             wordTableBody.innerHTML = batches.map(batch => {
                 const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
@@ -967,11 +967,25 @@ export function renderWordGenerator() {
             }).join('');
 
             // Quick Select Listeners
+            const toggleBulkButtons = () => {
+                const hasSelection = document.querySelectorAll('.word-batch-select:checked').length > 0;
+                if (hasSelection) {
+                    bulkWordBtn.classList.remove('hidden');
+                    bulkPdfBtn.classList.remove('hidden');
+                    bulkAttendanceBtn.classList.remove('hidden');
+                } else {
+                    bulkWordBtn.classList.add('hidden');
+                    bulkPdfBtn.classList.add('hidden');
+                    bulkAttendanceBtn.classList.add('hidden');
+                }
+            };
+
             const selectByStatus = (type) => {
                 const cbxs = document.querySelectorAll('.word-batch-select');
                 cbxs.forEach(cb => {
                     cb.checked = (cb.dataset.statusType === type);
                 });
+                toggleBulkButtons();
             };
 
             document.getElementById('sel-green-btn')?.addEventListener('click', () => selectByStatus('ready'));
@@ -981,6 +995,12 @@ export function renderWordGenerator() {
                 document.querySelectorAll('.word-batch-select').forEach(cb => cb.checked = false);
                 const selectAll = document.getElementById('select-all-word-batches');
                 if (selectAll) selectAll.checked = false;
+                toggleBulkButtons();
+            });
+
+            // Listen for individual changes
+            wordTableBody.querySelectorAll('.word-batch-select').forEach(cb => {
+                cb.addEventListener('change', toggleBulkButtons);
             });
         };
 
@@ -988,6 +1008,22 @@ export function renderWordGenerator() {
         document.getElementById('select-all-word-batches')?.addEventListener('change', (e) => {
             const checkboxes = document.querySelectorAll('.word-batch-select');
             checkboxes.forEach(cb => cb.checked = e.target.checked);
+            const toggleBulkButtons = () => {
+                const hasSelection = document.querySelectorAll('.word-batch-select:checked').length > 0;
+                const bulkWordBtn = document.getElementById('bulk-word-zip-btn');
+                const bulkPdfBtn = document.getElementById('bulk-pdf-zip-btn');
+                const bulkAttendanceBtn = document.getElementById('bulk-attendance-zip-btn');
+                if (hasSelection) {
+                    bulkWordBtn?.classList.remove('hidden');
+                    bulkPdfBtn?.classList.remove('hidden');
+                    bulkAttendanceBtn?.classList.remove('hidden');
+                } else {
+                    bulkWordBtn?.classList.add('hidden');
+                    bulkPdfBtn?.classList.add('hidden');
+                    bulkAttendanceBtn?.classList.add('hidden');
+                }
+            };
+            toggleBulkButtons();
         });
 
         // Bulk Actions
