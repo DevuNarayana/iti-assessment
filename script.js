@@ -1,4 +1,4 @@
-// Version 130.0 - Sector Hierarchy Visibility Improvements
+// Version 131.0 - Fixed Duplicate Declaration Syntax Error
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

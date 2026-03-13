@@ -214,10 +214,11 @@ export function renderAssessorCredentials() {
     const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
     const assessorFilterBatch = document.getElementById('assessor-filter-batch');
     const assessorFilterDate = document.getElementById('assessor-filter-date');
+    const container = document.getElementById('assessor-credentials-container');
 
     if (assessorFilterSsc && assessorFilterSsc.options.length === 1) {
         // Initialize date filter with today's date
-        if (assessorFilterDate) {
+        if (assessorFilterDate && !assessorFilterDate.value) {
             assessorFilterDate.value = new Date().toISOString().split('T')[0];
         }
 
@@ -236,6 +237,12 @@ export function renderAssessorCredentials() {
         if (printBtn) {
             printBtn.addEventListener('click', exportAllCredentials);
         }
+    }
+
+    if (assessorFilterBatch && assessorFilterBatch.value && assessorFilterBatch.value !== "") {
+        renderAssessorCredentialsView();
+    } else if (container) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Date or Sector Skill Council and Batch to view login credentials.</div>';
     }
 }
 
@@ -370,28 +377,6 @@ function exportAllCredentials() {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printHtml);
     printWindow.document.close();
-}
-
-export function renderAssessorCredentials() {
-    const assessorFilterSsc = document.getElementById('assessor-filter-ssc');
-    const assessorFilterBatch = document.getElementById('assessor-filter-batch');
-    const container = document.getElementById('assessor-credentials-container');
-
-    if (assessorFilterSsc && assessorFilterSsc.options.length === 1) {
-        state.sscs.forEach(ssc => {
-            const opt = document.createElement('option');
-            opt.value = ssc.name;
-            opt.textContent = ssc.name;
-            assessorFilterSsc.appendChild(opt);
-        });
-        assessorFilterSsc.onchange = handleAssessorSscChange;
-    }
-
-    if (assessorFilterBatch.value && assessorFilterBatch.value !== "") {
-        renderAssessorCredentialsView();
-    } else {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Please select a Date or Sector Skill Council and Batch to view login credentials.</div>';
-    }
 }
 
 export function handleAssessorSscChange() {
