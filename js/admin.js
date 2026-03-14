@@ -202,8 +202,6 @@ export function renderBatchTable() {
     if (!selectedSsc) {
         batchesTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">Please select a Sector Skill Council to view/add batches.</td></tr>`;
         if (batchCount) batchCount.textContent = 0;
-        document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
-        document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
         return;
@@ -229,15 +227,11 @@ export function renderBatchTable() {
 
     if (filteredBatches.length === 0) {
         batchesTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
-        document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
-        document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
         if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
         return;
     }
 
-    document.getElementById('bulk-download-pdf-btn')?.classList.remove('hidden');
-    document.getElementById('bulk-download-evidence-btn')?.classList.remove('hidden');
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
     if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
 
