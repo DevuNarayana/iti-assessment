@@ -360,6 +360,7 @@ body {
 
 .content {
     flex: 1;
+    min-width: 0;
     padding: 2rem;
     overflow-y: auto;
 }
