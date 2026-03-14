@@ -1,4 +1,4 @@
-// Version 142.0 - Added Bulk Delete for Batches
+// Version 143.0 - Added Unassigned/Legacy sorting for old Batches
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

@@ -30,7 +30,7 @@ export function updateGlobalSscDropdown() {
     populateSsc(globalBatchSscSelect);
     populateSsc(sectorMgmtSscSelect);
 
-    const populateSectors = (el, sectors) => {
+    const populateSectors = (el, sectors, includeUnassigned = false) => {
         if (!el) return;
         const currentSelected = el.value;
         el.innerHTML = '<option value="" disabled selected>Select Sector</option>';
@@ -39,8 +39,19 @@ export function updateGlobalSscDropdown() {
             opt.value = opt.textContent = s;
             el.appendChild(opt);
         });
-        if (sectors.includes(currentSelected)) el.value = currentSelected;
-        el.disabled = sectors.length === 0;
+        
+        if (includeUnassigned) {
+            const unOpt = document.createElement('option');
+            unOpt.value = "UNASSIGNED";
+            unOpt.textContent = "Unassigned / Legacy";
+            el.appendChild(unOpt);
+        }
+
+        if (sectors.includes(currentSelected) || (includeUnassigned && currentSelected === "UNASSIGNED")) {
+            el.value = currentSelected;
+        }
+        
+        el.disabled = sectors.length === 0 && !includeUnassigned;
     };
 
     // Handle Batches Section logic
@@ -49,8 +60,8 @@ export function updateGlobalSscDropdown() {
         const sscObj = state.sscs.find(s => s.name === selectedSsc);
         const sectors = sscObj?.sectors || [];
         
-        populateSectors(globalBatchSectorSelect, sectors);
-        populateSectors(batchSectorModalSelect, sectors);
+        populateSectors(globalBatchSectorSelect, sectors, true);
+        populateSectors(batchSectorModalSelect, sectors, false);
 
         if (openCreateBatchBtn) {
             if (selectedSsc && globalBatchSectorSelect && globalBatchSectorSelect.value) {
@@ -200,7 +211,12 @@ export function renderBatchTable() {
 
     let filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
     if (selectedSector) {
-        filteredBatches = filteredBatches.filter(b => b.sector === selectedSector);
+        if (selectedSector === "UNASSIGNED") {
+            // Filter for batches where sector is missing, null, empty string, or "N/A"
+            filteredBatches = filteredBatches.filter(b => !b.sector || b.sector === 'N/A' || b.sector.trim() === '');
+        } else {
+            filteredBatches = filteredBatches.filter(b => b.sector === selectedSector);
+        }
     }
     // Sort numerically by SR
     filteredBatches.sort((a, b) => {
@@ -556,11 +572,30 @@ export function handleAssessorSscChange() {
         opt.value = s; opt.textContent = s;
         assessorFilterSector.appendChild(opt);
     });
+    
+    // Support legacy/unassigned batches if sectors exist
+    if (sectors.length > 0) {
+        const unOpt = document.createElement('option');
+        unOpt.value = "UNASSIGNED"; unOpt.textContent = "Unassigned / Legacy";
+        assessorFilterSector.appendChild(unOpt);
+    }
+    
     assessorFilterSector.disabled = sectors.length === 0;
 
     assessorFilterSector.onchange = () => {
         assessorFilterBatch.innerHTML = '<option value="">Select Batch</option>';
-        const filteredBatches = state.batches.filter(b => b.ssc === selectedSsc && (!assessorFilterSector.value || b.sector === assessorFilterSector.value));
+        const filteredBatches = state.batches.filter(b => {
+            if (b.ssc !== selectedSsc) return false;
+            
+            if (!assessorFilterSector.value) return true;
+            
+            if (assessorFilterSector.value === "UNASSIGNED") {
+                return !b.sector || b.sector === 'N/A' || b.sector.trim() === '';
+            }
+            
+            return b.sector === assessorFilterSector.value;
+        });
+        
         if (filteredBatches.length > 0) {
             assessorFilterBatch.disabled = false;
             filteredBatches.forEach(b => {
@@ -1166,6 +1201,11 @@ export function renderWordGenerator() {
                     opt.value = s; opt.textContent = s;
                     wordFilterSector.appendChild(opt);
                 });
+                
+                const unOpt = document.createElement('option');
+                unOpt.value = "UNASSIGNED"; unOpt.textContent = "Unassigned / Legacy";
+                wordFilterSector.appendChild(unOpt);
+
                 wordFilterSector.disabled = false;
             } else {
                 // If SSC has no sectors, try rendering all batches for SSC
@@ -1196,7 +1236,11 @@ export function renderWordGenerator() {
             // Filter Batches for this SSC & Sector
             let filteredBatches = state.batches.filter(b => b.ssc === ssc);
             if (sector) {
-                filteredBatches = filteredBatches.filter(b => b.sector === sector);
+                if (sector === "UNASSIGNED") {
+                    filteredBatches = filteredBatches.filter(b => !b.sector || b.sector === 'N/A' || b.sector.trim() === '');
+                } else {
+                    filteredBatches = filteredBatches.filter(b => b.sector === sector);
+                }
             }
             filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
 
