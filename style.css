@@ -757,6 +757,8 @@ body {
 .admin-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 0.85rem; /* Make text smaller to fit more data */
+    table-layout: auto; /* Fall back to auto to ensure cell contents dictate narrowest safe width */
 }
 
 .admin-table thead {
@@ -764,16 +766,18 @@ body {
 }
 
 .admin-table th {
-    padding: 1rem;
+    padding: 0.5rem 0.25rem; /* Drastically reduce padding */
     text-align: left;
     font-weight: 600;
     color: var(--text-color);
     border-bottom: 2px solid var(--glass-border);
+    white-space: nowrap; /* Prevent headers from stacking */
 }
 
 .admin-table td {
-    padding: 1rem;
+    padding: 0.5rem 0.25rem; /* Drastically reduce padding */
     border-bottom: 1px solid var(--glass-border);
+    white-space: nowrap; /* Prevent data from stacking and stretching height */
 }
 
 .admin-table tbody tr:last-child td {

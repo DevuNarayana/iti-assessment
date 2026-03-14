@@ -1,4 +1,4 @@
-// Version 146.0 - Fixed Action Button scaling and wrapping CSS in top-bars
+// Version 147.0 - Compressed admin table layout to try and prevent horizontal scrolling
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
