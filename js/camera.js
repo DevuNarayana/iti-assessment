@@ -1,6 +1,7 @@
 import { db, collection, addDoc, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '../firebase-config.js';
 import { state } from './state.js';
 import { showView } from './utils.js';
+import { getBatchHistory } from './assessor.js';
 
 // Camera State
 let currentStream = null;
@@ -97,19 +98,48 @@ function updateGpsUI(isFixed) {
     }
 }
 
-export function startAssessment(type) {
+export async function startAssessment(type) {
+    const batch = state.loggedInUser?.batch;
+    const batchId = batch?.batchId || 'Default';
+    
+    // Check limits
+    const existingHistory = await getBatchHistory(batchId);
+    let currentUploadedCount = 0;
+    
+    existingHistory.forEach(record => {
+        if (record.type === type) {
+            currentUploadedCount += (record.photos ? record.photos.length : 0);
+        }
+    });
+
+    const limit = photoLimits[type];
+    if (currentUploadedCount >= limit) {
+        alert(`⚠️ You have already uploaded the maximum allowed photos (${limit}) for ${type}. Please go to your History and delete the previous submission if you want to retake them.`);
+        return; // Block camera opening
+    }
+
     cameraType = type;
-    capturedPhotos = [];
-    openCameraModal(type);
+    capturedPhotos = []; // These are just the *new* ones for this session
+    
+    // Pass the remaining allowed count to the modal
+    const remainingAllowed = limit - currentUploadedCount;
+    openCameraModal(type, remainingAllowed);
 }
 
-export function openCameraModal(type) {
+export function openCameraModal(type, remainingAllowed = null) {
     const modal = document.getElementById('camera-modal');
     const title = document.getElementById('camera-title');
     const counter = document.getElementById('photo-counter');
 
-    if (title) title.textContent = `${type} Assessment`;
-    if (counter) counter.textContent = `0/${photoLimits[type]}`;
+    const sessionLimit = remainingAllowed !== null ? remainingAllowed : photoLimits[type];
+
+    if (title) title.textContent = `Capture Photos: ${type}`;
+    if (counter) counter.textContent = `0/${sessionLimit}`;
+    
+    if (modal) {
+        modal.dataset.sessionLimit = sessionLimit;
+        modal.classList.remove('hidden');
+    }
 
     // Start or verify location request
     requestLocation();
@@ -220,8 +250,13 @@ export function initCameraListeners() {
     document.getElementById('close-camera-btn')?.addEventListener('click', closeCamera);
 
     document.getElementById('capture-btn')?.addEventListener('click', () => {
-        const limit = photoLimits[cameraType];
-        if (capturedPhotos.length >= limit) return;
+        const modal = document.getElementById('camera-modal');
+        const sessionLimit = parseInt(modal?.dataset?.sessionLimit) || photoLimits[cameraType];
+        
+        if (capturedPhotos.length >= sessionLimit) {
+            alert(`You have reached the limit of ${sessionLimit} photo(s) for this session.`);
+            return;
+        }
 
         const video = document.getElementById('camera-feed');
         const canvas = document.getElementById('camera-canvas');
@@ -312,11 +347,12 @@ export function initCameraListeners() {
 
     photoUpload?.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
-        const limit = photoLimits[cameraType];
+        const modal = document.getElementById('camera-modal');
+        const sessionLimit = parseInt(modal?.dataset?.sessionLimit) || photoLimits[cameraType];
 
         files.forEach(file => {
-            if (capturedPhotos.length >= limit) {
-                console.warn("Photo limit reached, skipping file:", file.name);
+            if (capturedPhotos.length >= sessionLimit) {
+                console.warn(`Session photo limit (${sessionLimit}) reached, skipping file:`, file.name);
                 return;
             }
 

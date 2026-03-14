@@ -1,4 +1,4 @@
-import { db, collection, query, where, getDocs, addDoc, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '../firebase-config.js';
+import { db, collection, query, where, getDocs, addDoc, doc, deleteDoc, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '../firebase-config.js';
 import { state } from './state.js';
 import { openLightbox, startAssessment, requestLocation } from './camera.js';
 import { showView } from './utils.js';
@@ -69,6 +69,20 @@ function backToTasks() {
     }
 }
 
+export async function getBatchHistory(batchId) {
+    if (!batchId) return [];
+    try {
+        const q = query(collection(db, "assessments"), where("batchId", "==", batchId));
+        const snapshot = await getDocs(q);
+        const records = [];
+        snapshot.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
+        return records;
+    } catch (err) {
+        console.error("Error fetching batch history:", err);
+        return [];
+    }
+}
+
 function showHistory() {
     document.getElementById('assessor-tasks-container')?.classList.add('hidden');
     document.getElementById('assessment-options-container')?.classList.add('hidden');
@@ -99,8 +113,8 @@ async function renderHistory() {
         }
 
         const snapshot = await getDocs(q);
-        snapshot.forEach(doc => {
-            history.push(doc.data());
+        snapshot.forEach(docSnap => {
+            history.push({ id: docSnap.id, ...docSnap.data() });
         });
     } catch (err) {
         console.error("Error fetching history:", err);
@@ -125,15 +139,23 @@ async function renderHistory() {
         `).join('');
 
         const html = `
-            <div class="glass-panel" style="padding: 1.5rem;">
+            <div class="glass-panel" style="padding: 1.5rem;" id="history-item-${item.id}">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                     <div>
                         <h3 style="color: var(--primary-color); margin-bottom: 0.25rem;">${item.type} Assessment</h3>
                         <div style="font-size: 0.9rem; color: var(--text-muted);">Batch: ${item.batchId}</div>
                     </div>
-                    <div style="text-align: right; font-size: 0.85rem; color: var(--text-muted);">
-                        <div>${date}</div>
-                        <div>${time}</div>
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                        <button class="action-btn delete-history-btn" data-id="${item.id}" style="padding: 0.25rem 0.5rem; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem;">
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            <div>${date}</div>
+                            <div>${time}</div>
+                        </div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
@@ -150,10 +172,52 @@ async function renderHistory() {
     container.querySelectorAll('.history-thumb').forEach(img => {
         img.addEventListener('click', () => openLightbox(img.src));
     });
+
+    // Attach delete listeners
+    container.querySelectorAll('.delete-history-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.dataset.id;
+            if (confirm("Are you sure you want to delete this submission? This will allow you to upload photos for this category again.")) {
+                try {
+                    e.currentTarget.disabled = true;
+                    e.currentTarget.innerHTML = "Deleting...";
+                    await deleteDoc(doc(db, "assessments", id));
+                    renderHistory(); // Refresh history
+                } catch (err) {
+                    console.error("Error deleting document:", err);
+                    alert("Failed to delete record.");
+                    e.currentTarget.disabled = false;
+                    e.currentTarget.innerHTML = "Delete";
+                }
+            }
+        });
+    });
 }
 
 // Initialization
 export function initAssessorListeners() {
+    // Nav Links
+    const navTasks = document.getElementById('assessor-nav-tasks');
+    const navHistory = document.getElementById('assessor-nav-history');
+
+    if (navTasks) {
+        navTasks.addEventListener('click', (e) => {
+            e.preventDefault();
+            navTasks.classList.add('active');
+            navHistory?.classList.remove('active');
+            backToTasks();
+        });
+    }
+
+    if (navHistory) {
+        navHistory.addEventListener('click', (e) => {
+            e.preventDefault();
+            navHistory.classList.add('active');
+            navTasks?.classList.remove('active');
+            showHistory();
+        });
+    }
+
     // Back button (in options and history)
     document.querySelectorAll('[onclick="backToTasks()"]').forEach(btn => {
         btn.removeAttribute('onclick'); // remove inline
@@ -220,26 +284,57 @@ async function handleSmartUpload(e) {
         return;
     }
 
-    // Force Location
-    requestLocation();
-    
-    const progressDiv = document.getElementById('smart-upload-progress');
-    const statusText = document.getElementById('smart-upload-status');
-    progressDiv.classList.remove('hidden');
-
     const batch = state.loggedInUser?.batch;
     const batchId = batch?.batchId || 'Default';
     const ssc = batch?.ssc || '';
 
+    // Fetch history to enforce limits
+    const existingHistory = await getBatchHistory(batchId);
+    const uploadedCounts = {
+        'Theory': 0, 'Practical': 0, 'Viva': 0, 'Group': 0, 'Attendance': 0
+    };
+    
+    existingHistory.forEach(record => {
+        if (uploadedCounts[record.type] !== undefined) {
+            uploadedCounts[record.type] += (record.photos ? record.photos.length : 0);
+        }
+    });
+
     try {
         let currentFileNumber = 1;
-        const totalFiles = categoriesFound.reduce((sum, [k, v]) => sum + Math.min(v.length, photoLimits[k]), 0);
-
+        
+        // Filter out categories that are already full before counting total files
         for (const [type, typeFiles] of Object.entries(categories)) {
-            if (typeFiles.length === 0) continue;
-
+            const alreadyUploaded = uploadedCounts[type];
             const limit = photoLimits[type];
-            const filesToUpload = typeFiles.slice(0, limit);
+            if (alreadyUploaded >= limit && typeFiles.length > 0) {
+                alert(`⚠️ You have already uploaded ${alreadyUploaded}/${limit} photos for ${type}. Skipping these files. Go to History to delete previous uploads if you want to replace them.`);
+                categories[type] = []; // Clear them so they don't process
+            } else if (alreadyUploaded + typeFiles.length > limit) {
+                const allowedNew = limit - alreadyUploaded;
+                alert(`⚠️ You can only upload ${allowedNew} more photo(s) for ${type}. Only the first ${allowedNew} matching files will be uploaded.`);
+                categories[type] = typeFiles.slice(0, allowedNew);
+            }
+        }
+
+        const categoriesFoundAfterFilter = Object.entries(categories).filter(([k, v]) => v.length > 0);
+        if (categoriesFoundAfterFilter.length === 0) {
+            alert("No new files to upload (all selected categories have reached their limits or no matching files were found).");
+            return;
+        }
+
+        const totalFiles = categoriesFoundAfterFilter.reduce((sum, [k, v]) => sum + v.length, 0);
+
+        // Force Location
+        requestLocation();
+        
+        const progressDiv = document.getElementById('smart-upload-progress');
+        const statusText = document.getElementById('smart-upload-status');
+        progressDiv.classList.remove('hidden');
+
+        for (const [type, filesToUpload] of categoriesFoundAfterFilter) {
+            if (filesToUpload.length === 0) continue;
+
             const uploadedUrls = [];
 
             statusText.textContent = `Uploading ${type}...`;

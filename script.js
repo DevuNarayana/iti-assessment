@@ -1,4 +1,4 @@
-// Version 138.0 - Added Smart Bulk Folder Upload
+// Version 139.0 - Added History Management and Strict Photo Limits
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
