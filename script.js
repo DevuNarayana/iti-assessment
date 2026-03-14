@@ -1,4 +1,4 @@
-// Version 149.0 - Removed unused Attendance/Evidence ZIP buttons from Batches section
+// Version 150.0 - Fix Word Generator table styling and listener duplication
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

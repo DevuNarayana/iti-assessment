@@ -1055,12 +1055,54 @@ export function initAdminListeners() {
         checkboxes.forEach(cb => cb.checked = e.target.checked);
     });
 
-    // Bulk Download PDF Btn
-    document.getElementById('bulk-download-pdf-btn')?.addEventListener('click', generateBulkPDFZip);
+    // Bulk Download Buttons (Cleaned up: removed non-existent bulk-download-pdf-btn and bulk-download-evidence-btn)
 
-    // Bulk Download Evidence Btn
-    document.getElementById('bulk-download-evidence-btn')?.addEventListener('click', () => generateBulkEvidenceZip());
+    // Word Generator Listeners
+    document.getElementById('sel-green-btn')?.addEventListener('click', () => selectByStatus('ready'));
+    document.getElementById('sel-yellow-btn')?.addEventListener('click', () => selectByStatus('photos'));
+    document.getElementById('sel-red-btn')?.addEventListener('click', () => selectByStatus('attend'));
+    document.getElementById('sel-clear-btn')?.addEventListener('click', () => {
+        document.querySelectorAll('.word-batch-select').forEach(cb => cb.checked = false);
+        const selectAll = document.getElementById('select-all-word-batches');
+        if (selectAll) selectAll.checked = false;
+        toggleBulkButtons();
+    });
+
+    document.getElementById('select-all-word-batches')?.addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.word-batch-select');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+        toggleBulkButtons();
+    });
+
+    document.getElementById('bulk-word-zip-btn')?.addEventListener('click', () => generateBulkGenericZip('word'));
+    document.getElementById('bulk-pdf-zip-btn')?.addEventListener('click', () => generateBulkGenericZip('pdf'));
+    document.getElementById('bulk-attendance-zip-btn')?.addEventListener('click', () => generateBulkGenericZip('attendance'));
 }
+
+const toggleBulkButtons = () => {
+    const hasSelection = document.querySelectorAll('.word-batch-select:checked').length > 0;
+    const bulkWordBtn = document.getElementById('bulk-word-zip-btn');
+    const bulkPdfBtn = document.getElementById('bulk-pdf-zip-btn');
+    const bulkAttendanceBtn = document.getElementById('bulk-attendance-zip-btn');
+
+    if (hasSelection) {
+        bulkWordBtn?.classList.remove('hidden');
+        bulkPdfBtn?.classList.remove('hidden');
+        bulkAttendanceBtn?.classList.remove('hidden');
+    } else {
+        bulkWordBtn?.classList.add('hidden');
+        bulkPdfBtn?.classList.add('hidden');
+        bulkAttendanceBtn?.classList.add('hidden');
+    }
+};
+
+const selectByStatus = (type) => {
+    const cbxs = document.querySelectorAll('.word-batch-select');
+    cbxs.forEach(cb => {
+        cb.checked = (cb.dataset.statusType === type);
+    });
+    toggleBulkButtons();
+};
 
 async function generateBulkPDFZip() {
     const selectedCheckboxes = document.querySelectorAll('.batch-select:checked');
@@ -1182,105 +1224,12 @@ export function renderWordGenerator() {
 
             // Hide table contents
             wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council and Sector to view reports.</td></tr>`;
-            toggleBulkButtons();
-
-            if (!selectedSsc) return;
-
-            // Populate Sectors
-            const sscObj = state.sscs.find(s => s.name === selectedSsc);
-            const sectors = sscObj?.sectors || [];
-            if (sectors.length > 0) {
-                sectors.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s; opt.textContent = s;
-                    wordFilterSector.appendChild(opt);
-                });
-                
-                const unOpt = document.createElement('option');
-                unOpt.value = "UNASSIGNED"; unOpt.textContent = "Unassigned / Legacy";
-                wordFilterSector.appendChild(unOpt);
-
-                wordFilterSector.disabled = false;
-            } else {
-                // If SSC has no sectors, try rendering all batches for SSC
-                renderTableForSelection(selectedSsc, null);
-            }
-        };
-
-        // 3. Sector Change Logic (Render table for ALL batches in this sector)
-        wordFilterSector.onchange = () => {
-            const selectedSsc = wordFilterSsc.value;
-            const selectedSector = wordFilterSector.value;
-            renderTableForSelection(selectedSsc, selectedSector);
-        };
-
-        const renderTableForSelection = async (ssc, sector) => {
-            // Hide bulk buttons while loading
-            bulkWordBtn.classList.add('hidden');
-            bulkPdfBtn.classList.add('hidden');
-            bulkAttendanceBtn.classList.add('hidden');
-
-            if (!ssc) {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select an SSC and Sector to generate reports.</td></tr>`;
-                return;
-            }
-
-            wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--primary-color); padding: 3rem;">Loading batch data...</td></tr>`;
-
-            // Filter Batches for this SSC & Sector
-            let filteredBatches = state.batches.filter(b => b.ssc === ssc);
-            if (sector) {
-                if (sector === "UNASSIGNED") {
-                    filteredBatches = filteredBatches.filter(b => !b.sector || b.sector === 'N/A' || b.sector.trim() === '');
-                } else {
-                    filteredBatches = filteredBatches.filter(b => b.sector === sector);
-                }
-            }
-            filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
-
-            if (filteredBatches.length === 0) {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found.</td></tr>`;
-                return;
-            }
-
-            // Fetch summary of assessments for these batches to show "Status"
-            const statusMap = {}; // { batchId: { photos: 0, hasAttend: false } }
-            
-            try {
-                // Firestore "in" limit is 30. Handle chunks.
-                const batchIds = filteredBatches.map(b => b.batchId);
-                const chunks = [];
-                for (let i = 0; i < batchIds.length; i += 30) {
-                    chunks.push(batchIds.slice(i, i + 30));
-                }
-
-                const queryPromises = chunks.map(chunk => 
-                    getDocs(query(collection(db, "assessments"), where("batchId", "in", chunk)))
-                );
-                
-                const snapshots = await Promise.all(queryPromises);
-                snapshots.forEach(snap => {
-                    snap.forEach(doc => {
-                        const data = doc.data();
-                        if (data.batchId) {
-                            if (!statusMap[data.batchId]) statusMap[data.batchId] = { photos: 0, hasAttend: false };
-                            if (data.type === 'Attendance') {
-                                statusMap[data.batchId].hasAttend = true;
-                            } else {
-                                const count = (data.photos ? data.photos.length : 0);
-                                statusMap[data.batchId].photos += count;
-                            }
-                        }
-                    });
-                });
-            } catch (err) { console.error("Error fetching status:", err); }
-
             wordTableBody.innerHTML = filteredBatches.map(batch => {
                 const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
                 const hasEnoughPhotos = stats.photos >= 6;
                 const hasAttend = stats.hasAttend;
 
-                let color = '#ffffff'; // Default
+                let color = '#ffffff'; 
                 let statusText = 'Pending';
                 let icon = '⚪';
                 let statusType = 'pending';
@@ -1302,17 +1251,18 @@ export function renderWordGenerator() {
                     statusType = 'attend';
                 }
 
-                const cellStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
-                const statusHtml = `<span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span>`;
+                // Apply status color logic to columns that need it
+                const statusStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
+                const sectorStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 500;` : 'color: #10b981; font-weight: 500;';
 
                 return `
-                    <tr style="${cellStyle}">
+                    <tr>
                         <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
-                        <td style="${cellStyle}">${batch.batchId}</td>
-                        <td style="${cellStyle}; color: #10b981; font-weight: 500;">${batch.sector || 'N/A'}</td>
-                        <td style="${cellStyle}">${batch.jobRole}</td>
-                        <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
-                        <td style="${cellStyle}">${statusHtml}</td>
+                        <td style="${statusStyle}">${batch.batchId}</td>
+                        <td style="${sectorStyle}">${batch.sector || 'N/A'}</td>
+                        <td style="${statusStyle}">${batch.jobRole}</td>
+                        <td style="${statusStyle}">${batch.skillHub || 'N/A'}</td>
+                        <td><span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span></td>
                         <td>
                             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
@@ -1330,62 +1280,12 @@ export function renderWordGenerator() {
             });
             toggleBulkButtons();
         };
-
-        // Bulk Buttons & Quick Select Logic
-
-        const toggleBulkButtons = () => {
-            const hasSelection = document.querySelectorAll('.word-batch-select:checked').length > 0;
-            if (hasSelection) {
-                bulkWordBtn.classList.remove('hidden');
-                bulkPdfBtn.classList.remove('hidden');
-                bulkAttendanceBtn.classList.remove('hidden');
-            } else {
-                bulkWordBtn.classList.add('hidden');
-                bulkPdfBtn.classList.add('hidden');
-                bulkAttendanceBtn.classList.add('hidden');
-            }
-        };
-
-        const selectByStatus = (type) => {
-            const cbxs = document.querySelectorAll('.word-batch-select');
-            cbxs.forEach(cb => {
-                cb.checked = (cb.dataset.statusType === type);
-            });
-            toggleBulkButtons();
-        };
-
-        document.getElementById('sel-green-btn')?.addEventListener('click', () => selectByStatus('ready'));
-        document.getElementById('sel-yellow-btn')?.addEventListener('click', () => selectByStatus('photos'));
-        document.getElementById('sel-red-btn')?.addEventListener('click', () => selectByStatus('attend'));
-        document.getElementById('sel-clear-btn')?.addEventListener('click', () => {
-            document.querySelectorAll('.word-batch-select').forEach(cb => cb.checked = false);
-            const selectAll = document.getElementById('select-all-word-batches');
-            if (selectAll) selectAll.checked = false;
-            toggleBulkButtons();
-        });
-
-        // Select All Handler
-        document.getElementById('select-all-word-batches')?.addEventListener('change', (e) => {
-            const checkboxes = document.querySelectorAll('.word-batch-select');
-            checkboxes.forEach(cb => cb.checked = e.target.checked);
-            toggleBulkButtons();
-        });
-
-        // Bulk Actions
-        bulkWordBtn?.addEventListener('click', () => generateBulkGenericZip('word'));
-        bulkPdfBtn?.addEventListener('click', () => generateBulkGenericZip('pdf'));
-        bulkAttendanceBtn?.addEventListener('click', () => generateBulkGenericZip('attendance'));
     }
 }
 
 // Global hook for single attendance
 window.generateAttendanceReportForBatch = (batchId) => {
-    // We need to set the value so generateAttendanceReport works, or refactor generateAttendanceReport
-    const oldVal = document.getElementById('word-filter-batch')?.value;
-    const mockSelect = document.createElement('select');
-    mockSelect.id = 'word-filter-batch';
-    mockSelect.value = batchId;
-    // Actually, let's just refactor generateAttendanceReport slightly to accept ID
+    // Standardized to direct call
     generateAttendanceReport(batchId);
 };
 
@@ -1506,7 +1406,7 @@ export async function generateAttendanceReport(targetBatchId = null, isBulk = fa
 }
 
 export async function generateWordDoc(isPdf = false, targetBatchId = null, isBulk = false) {
-    const selectedBatchId = targetBatchId || document.getElementById('word-filter-batch').value;
+    const selectedBatchId = targetBatchId || document.getElementById('word-filter-batch')?.value;
     if (!selectedBatchId) return null;
 
     const batch = state.batches.find(b => b.batchId === selectedBatchId);
