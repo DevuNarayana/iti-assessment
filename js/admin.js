@@ -263,9 +263,10 @@ export function renderBatchTable() {
     // Checkbox logic for Select All and showing Bulk Delete button
     const toggleBulkDeleteBtn = () => {
         const hasSelection = document.querySelectorAll('.batch-select:checked').length > 0;
-        if (bulkDeleteBtn) {
-            if (hasSelection) bulkDeleteBtn.classList.remove('hidden');
-            else bulkDeleteBtn.classList.add('hidden');
+        const currentBtn = document.getElementById('bulk-delete-batches-btn');
+        if (currentBtn) {
+            if (hasSelection) currentBtn.classList.remove('hidden');
+            else currentBtn.classList.add('hidden');
         }
     };
 
@@ -306,7 +307,6 @@ export function renderBatchTable() {
                         const id = box.dataset.id;
                         const batchId = box.dataset.batchId;
                         
-                        // Wait for each deletion rather than parallelizing completely to avoid crashing Firestore multi-reads
                         await executeBatchDeletion(id, batchId);
                         totalDeletedCount++;
                     }
@@ -316,13 +316,13 @@ export function renderBatchTable() {
                 } catch (err) {
                     console.error("Bulk Delete Error:", err);
                     alert("An error occurred during bulk deletion. Some batches may not have been deleted.");
-                    // Refresh table anyway to show current state
                     await syncData();
                     renderBatchTable();
                 } finally {
                     newBulkBtn.disabled = false;
                     newBulkBtn.innerHTML = '🗑️ Delete Selected';
-                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                    const currentSelectAll = document.getElementById('select-all-batches');
+                    if (currentSelectAll) currentSelectAll.checked = false;
                 }
             }
         });

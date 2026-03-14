@@ -1,4 +1,4 @@
-// Version 143.0 - Added Unassigned/Legacy sorting for old Batches
+// Version 144.0 - Fixed DOM node reference bug in Bulk Batch Deletion
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
