@@ -1,4 +1,4 @@
-// Version 148.0 - Removed max-width constraint to allow dashboard to expand to full screen width
+// Version 149.0 - Removed unused Attendance/Evidence ZIP buttons from Batches section
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
