@@ -1,4 +1,4 @@
-// Version 141.0 - Refined Word Generator to 2-Step Filter (SSC -> Sector)
+// Version 142.0 - Added Bulk Delete for Batches
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

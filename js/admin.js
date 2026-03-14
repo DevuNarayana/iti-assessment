@@ -182,6 +182,8 @@ export function renderBatchTable() {
     const batchCount = document.getElementById('batch-count');
     const globalBatchSscSelect = document.getElementById('global-batch-ssc');
     const globalBatchSectorSelect = document.getElementById('global-batch-sector');
+    const bulkDeleteBtn = document.getElementById('bulk-delete-batches-btn');
+    const selectAllCheckbox = document.getElementById('select-all-batches');
     if (!batchesTableBody) return;
     const selectedSsc = globalBatchSscSelect ? globalBatchSscSelect.value : '';
     const selectedSector = globalBatchSectorSelect ? globalBatchSectorSelect.value : '';
@@ -191,6 +193,8 @@ export function renderBatchTable() {
         if (batchCount) batchCount.textContent = 0;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
+        if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
         return;
     }
 
@@ -211,15 +215,19 @@ export function renderBatchTable() {
         batchesTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">No batches found for ${selectedSsc}.</td></tr>`;
         document.getElementById('bulk-download-pdf-btn')?.classList.add('hidden');
         document.getElementById('bulk-download-evidence-btn')?.classList.add('hidden');
+        if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
         return;
     }
 
     document.getElementById('bulk-download-pdf-btn')?.classList.remove('hidden');
     document.getElementById('bulk-download-evidence-btn')?.classList.remove('hidden');
+    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    if (bulkDeleteBtn) bulkDeleteBtn.classList.add('hidden');
 
     batchesTableBody.innerHTML = filteredBatches.map((batch) => `
         <tr>
-            <td><input type="checkbox" class="batch-select" data-id="${batch.batchId}"></td>
+            <td><input type="checkbox" class="batch-select" data-id="${batch.id}" data-batch-id="${batch.batchId}"></td>
             <td>${batch.sr}</td>
             <td>${batch.day}</td>
             <td>${batch.month}</td>
@@ -230,16 +238,79 @@ export function renderBatchTable() {
             <td>${batch.skillHub}</td>
             <td>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="action-btn" style="border-color: var(--primary-color); color: var(--primary-color); padding: 0.25rem 0.75rem;">View</button>
-                    <button class="action-btn delete-batch-btn" data-id="${batch.id}" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">Delete</button>
+                    <button class="action-btn delete-batch-btn" data-id="${batch.id}" data-batch-id="${batch.batchId}" style="border-color: #ef4444; color: #ef4444; padding: 0.25rem 0.75rem;">Delete</button>
                 </div>
             </td>
         </tr>
     `).join('');
 
-    document.querySelectorAll('.delete-batch-btn').forEach(btn => {
-        btn.addEventListener('click', () => deleteBatch(btn.dataset.id));
+    // Checkbox logic for Select All and showing Bulk Delete button
+    const toggleBulkDeleteBtn = () => {
+        const hasSelection = document.querySelectorAll('.batch-select:checked').length > 0;
+        if (bulkDeleteBtn) {
+            if (hasSelection) bulkDeleteBtn.classList.remove('hidden');
+            else bulkDeleteBtn.classList.add('hidden');
+        }
+    };
+
+    if (selectAllCheckbox) {
+        // Remove old listeners to prevent stacking
+        const newSelectAll = selectAllCheckbox.cloneNode(true);
+        selectAllCheckbox.replaceWith(newSelectAll);
+        newSelectAll.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.batch-select');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            toggleBulkDeleteBtn();
+        });
+    }
+
+    document.querySelectorAll('.batch-select').forEach(cb => {
+        cb.addEventListener('change', toggleBulkDeleteBtn);
     });
+
+    document.querySelectorAll('.delete-batch-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteBatch(btn.dataset.id, btn.dataset.batchId));
+    });
+
+    // Bulk Delete Action
+    if (bulkDeleteBtn) {
+        const newBulkBtn = bulkDeleteBtn.cloneNode(true);
+        bulkDeleteBtn.replaceWith(newBulkBtn);
+        newBulkBtn.addEventListener('click', async () => {
+            const selectedBoxes = document.querySelectorAll('.batch-select:checked');
+            if (selectedBoxes.length === 0) return;
+
+            if (confirm(`Are you sure you want to delete ${selectedBoxes.length} batches? This will also delete ALL associated evidence photos from the cloud.`)) {
+                newBulkBtn.disabled = true;
+                newBulkBtn.textContent = 'Deleting...';
+                
+                try {
+                    let totalDeletedCount = 0;
+                    for (const box of selectedBoxes) {
+                        const id = box.dataset.id;
+                        const batchId = box.dataset.batchId;
+                        
+                        // Wait for each deletion rather than parallelizing completely to avoid crashing Firestore multi-reads
+                        await executeBatchDeletion(id, batchId);
+                        totalDeletedCount++;
+                    }
+                    await syncData();
+                    renderBatchTable();
+                    alert(`Successfully deleted ${totalDeletedCount} batches.`);
+                } catch (err) {
+                    console.error("Bulk Delete Error:", err);
+                    alert("An error occurred during bulk deletion. Some batches may not have been deleted.");
+                    // Refresh table anyway to show current state
+                    await syncData();
+                    renderBatchTable();
+                } finally {
+                    newBulkBtn.disabled = false;
+                    newBulkBtn.innerHTML = '🗑️ Delete Selected';
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                }
+            }
+        });
+    }
 }
 
 export async function deleteSsc(id) {
@@ -256,41 +327,42 @@ export async function deleteSsc(id) {
     }
 }
 
-export async function deleteBatch(id) {
-    if (confirm(`Are you sure you want to delete Batch "${id}"? This will also delete ALL associated evidence photos from the cloud.`)) {
+export async function deleteBatch(id, batchIdName) {
+    if (confirm(`Are you sure you want to delete Batch "${batchIdName || id}"? This will also delete ALL associated evidence photos from the cloud.`)) {
         try {
-            // Logic to delete evidence and batch
-            const q = query(collection(db, "assessments"), where("batchId", "==", id));
-            const snapshot = await getDocs(q);
-            const allPhotoUrls = [];
-            const assessmentDocIds = [];
-
-            snapshot.forEach(doc => {
-                assessmentDocIds.push(doc.id);
-                if (doc.data().photos) allPhotoUrls.push(...doc.data().photos);
-            });
-
-            if (allPhotoUrls.length > 0) {
-                // Mock delete call or implement cloud function call for cleanup
-                // Since this is client side, we might skip the API routing for now or keep it same as original
-                await fetch('/api/delete-photos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ urls: allPhotoUrls })
-                }).catch(e => console.warn("Cloudinary delete failed/skipped", e));
-            }
-
-            await Promise.all(assessmentDocIds.map(docId => deleteDoc(doc(db, "assessments", docId))));
-            await deleteDoc(doc(db, "batches", id));
-
+            await executeBatchDeletion(id, batchIdName || id);
             await syncData();
             renderBatchTable();
-            alert(`Batch ${id} deleted.`);
+            alert(`Batch ${batchIdName || id} deleted.`);
         } catch (err) {
             console.error("Delete Batch Error:", err);
             alert("Failed to delete Batch.");
         }
     }
+}
+
+// Core function isolated for use in single and bulk deletes
+export async function executeBatchDeletion(docId, batchIdName) {
+    const q = query(collection(db, "assessments"), where("batchId", "==", batchIdName));
+    const snapshot = await getDocs(q);
+    const allPhotoUrls = [];
+    const assessmentDocIds = [];
+
+    snapshot.forEach(doc => {
+        assessmentDocIds.push(doc.id);
+        if (doc.data().photos) allPhotoUrls.push(...doc.data().photos);
+    });
+
+    if (allPhotoUrls.length > 0) {
+        await fetch('/api/delete-photos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ urls: allPhotoUrls })
+        }).catch(e => console.warn("Cloudinary delete failed/skipped", e));
+    }
+
+    await Promise.all(assessmentDocIds.map(aDocId => deleteDoc(doc(db, "assessments", aDocId))));
+    await deleteDoc(doc(db, "batches", docId));
 }
 
 // Assessor Credentials Logic
