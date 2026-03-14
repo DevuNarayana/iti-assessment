@@ -1,4 +1,4 @@
-// Version 145.0 - Fixed layout bug hiding table checkboxes on narrow screens
+// Version 146.0 - Fixed Action Button scaling and wrapping CSS in top-bars
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

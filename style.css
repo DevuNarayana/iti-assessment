@@ -736,7 +736,18 @@ body {
 
 .section-actions {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-actions .action-btn {
+    width: auto !important;
+    padding: 0.5rem 1rem !important;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .table-container {
