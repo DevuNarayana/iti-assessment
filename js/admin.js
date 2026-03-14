@@ -1057,7 +1057,6 @@ async function generateBulkPDFZip() {
 export function renderWordGenerator() {
     const wordFilterSsc = document.getElementById('word-filter-ssc');
     const wordFilterSector = document.getElementById('word-filter-sector');
-    const wordFilterBatch = document.getElementById('word-filter-batch');
     const wordTableBody = document.getElementById('word-batch-table-body');
     const bulkWordBtn = document.getElementById('bulk-word-zip-btn');
     const bulkPdfBtn = document.getElementById('bulk-pdf-zip-btn');
@@ -1076,15 +1075,12 @@ export function renderWordGenerator() {
         wordFilterSsc.onchange = () => {
             const selectedSsc = wordFilterSsc.value;
             
-            // Clear & Disable downstream dropdowns
+            // Clear & Disable Sector downstream
             wordFilterSector.innerHTML = '<option value="">Select Sector</option>';
             wordFilterSector.disabled = true;
-            
-            wordFilterBatch.innerHTML = '<option value="">Select Batch</option>';
-            wordFilterBatch.disabled = true;
 
             // Hide table contents
-            wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council, Sector, and Batch to view reports.</td></tr>`;
+            wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council and Sector to view reports.</td></tr>`;
             toggleBulkButtons();
 
             if (!selectedSsc) return;
@@ -1099,138 +1095,134 @@ export function renderWordGenerator() {
                     wordFilterSector.appendChild(opt);
                 });
                 wordFilterSector.disabled = false;
+            } else {
+                // If SSC has no sectors, try rendering all batches for SSC
+                renderTableForSelection(selectedSsc, null);
             }
         };
 
-        // 3. Sector Change Logic
+        // 3. Sector Change Logic (Render table for ALL batches in this sector)
         wordFilterSector.onchange = () => {
             const selectedSsc = wordFilterSsc.value;
             const selectedSector = wordFilterSector.value;
-
-            // Clear & Disable downstream
-            wordFilterBatch.innerHTML = '<option value="">Select Batch</option>';
-            wordFilterBatch.disabled = true;
-
-            // Hide table contents
-            wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading batches for selected sector...</td></tr>`;
-            toggleBulkButtons();
-
-            if (!selectedSector || !selectedSsc) {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council, Sector, and Batch to view reports.</td></tr>`;
-                return;
-            }
-
-            // Populate Batches for this SSC & Sector
-            let filteredBatches = state.batches.filter(b => b.ssc === selectedSsc && b.sector === selectedSector);
-            filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
-
-            if (filteredBatches.length > 0) {
-                filteredBatches.forEach(b => {
-                    const opt = document.createElement('option');
-                    opt.value = b.batchId; opt.textContent = b.batchId;
-                    wordFilterBatch.appendChild(opt);
-                });
-                wordFilterBatch.disabled = false;
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Batch to generate reports.</td></tr>`;
-            } else {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for this sector.</td></tr>`;
-            }
+            renderTableForSelection(selectedSsc, selectedSector);
         };
 
-        // 4. Batch Change Logic (Render table)
-        wordFilterBatch.onchange = async () => {
-            const selectedBatchId = wordFilterBatch.value;
-            
+        const renderTableForSelection = async (ssc, sector) => {
             // Hide bulk buttons while loading
             bulkWordBtn.classList.add('hidden');
             bulkPdfBtn.classList.add('hidden');
             bulkAttendanceBtn.classList.add('hidden');
 
-            if (!selectedBatchId) {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Batch to generate reports.</td></tr>`;
+            if (!ssc) {
+                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select an SSC and Sector to generate reports.</td></tr>`;
                 return;
             }
 
             wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--primary-color); padding: 3rem;">Loading batch data...</td></tr>`;
 
-            // Find the specific batch
-            const batch = state.batches.find(b => b.batchId === selectedBatchId);
-            if (!batch) {
-                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red; padding: 3rem;">Error finding batch data.</td></tr>`;
+            // Filter Batches for this SSC & Sector
+            let filteredBatches = state.batches.filter(b => b.ssc === ssc);
+            if (sector) {
+                filteredBatches = filteredBatches.filter(b => b.sector === sector);
+            }
+            filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
+
+            if (filteredBatches.length === 0) {
+                wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found.</td></tr>`;
                 return;
             }
 
-            // Fetch summary of assessments for this single batch
-            const stats = { photos: 0, hasAttend: false };
+            // Fetch summary of assessments for these batches to show "Status"
+            const statusMap = {}; // { batchId: { photos: 0, hasAttend: false } }
+            
             try {
-                const q = query(collection(db, "assessments"), where("batchId", "==", batch.batchId));
-                const snapshot = await getDocs(q);
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.type === 'Attendance') {
-                        stats.hasAttend = true;
-                    } else {
-                        stats.photos += (data.photos ? data.photos.length : 0);
-                    }
+                // Firestore "in" limit is 30. Handle chunks.
+                const batchIds = filteredBatches.map(b => b.batchId);
+                const chunks = [];
+                for (let i = 0; i < batchIds.length; i += 30) {
+                    chunks.push(batchIds.slice(i, i + 30));
+                }
+
+                const queryPromises = chunks.map(chunk => 
+                    getDocs(query(collection(db, "assessments"), where("batchId", "in", chunk)))
+                );
+                
+                const snapshots = await Promise.all(queryPromises);
+                snapshots.forEach(snap => {
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.batchId) {
+                            if (!statusMap[data.batchId]) statusMap[data.batchId] = { photos: 0, hasAttend: false };
+                            if (data.type === 'Attendance') {
+                                statusMap[data.batchId].hasAttend = true;
+                            } else {
+                                const count = (data.photos ? data.photos.length : 0);
+                                statusMap[data.batchId].photos += count;
+                            }
+                        }
+                    });
                 });
             } catch (err) { console.error("Error fetching status:", err); }
 
-            const hasEnoughPhotos = stats.photos >= 6;
-            const hasAttend = stats.hasAttend;
+            wordTableBody.innerHTML = filteredBatches.map(batch => {
+                const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
+                const hasEnoughPhotos = stats.photos >= 6;
+                const hasAttend = stats.hasAttend;
 
-            let color = '#ffffff'; // Default
-            let statusText = 'Pending';
-            let icon = '⚪';
-            let statusType = 'pending';
+                let color = '#ffffff'; // Default
+                let statusText = 'Pending';
+                let icon = '⚪';
+                let statusType = 'pending';
 
-            if (hasEnoughPhotos && hasAttend) {
-                color = '#22c55e'; // Green
-                statusText = `Ready (${stats.photos} Ph + Attend)`;
-                icon = '🟢';
-                statusType = 'ready';
-            } else if (hasEnoughPhotos) {
-                color = '#facc15'; // Yellow
-                statusText = `Photos Only (${stats.photos})`;
-                icon = '🟡';
-                statusType = 'photos';
-            } else if (hasAttend) {
-                color = '#ef4444'; // Red
-                statusText = 'Attendance Only';
-                icon = '🔴';
-                statusType = 'attend';
-            }
+                if (hasEnoughPhotos && hasAttend) {
+                    color = '#22c55e'; // Green
+                    statusText = `Ready (${stats.photos} Ph + Attend)`;
+                    icon = '🟢';
+                    statusType = 'ready';
+                } else if (hasEnoughPhotos) {
+                    color = '#facc15'; // Yellow
+                    statusText = `Photos Only (${stats.photos})`;
+                    icon = '🟡';
+                    statusType = 'photos';
+                } else if (hasAttend) {
+                    color = '#ef4444'; // Red
+                    statusText = 'Attendance Only';
+                    icon = '🔴';
+                    statusType = 'attend';
+                }
 
-            const cellStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
-            const statusHtml = `<span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span>`;
+                const cellStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
+                const statusHtml = `<span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span>`;
 
-            wordTableBody.innerHTML = `
-                <tr style="${cellStyle}">
-                    <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
-                    <td style="${cellStyle}">${batch.batchId}</td>
-                    <td style="${cellStyle}; color: #10b981; font-weight: 500;">${batch.sector || 'N/A'}</td>
-                    <td style="${cellStyle}">${batch.jobRole}</td>
-                    <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
-                    <td style="${cellStyle}">${statusHtml}</td>
-                    <td>
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
-                            <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px; color: white;">PDF</button>
-                            <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px; color: white;">Attend</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+                return `
+                    <tr style="${cellStyle}">
+                        <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
+                        <td style="${cellStyle}">${batch.batchId}</td>
+                        <td style="${cellStyle}; color: #10b981; font-weight: 500;">${batch.sector || 'N/A'}</td>
+                        <td style="${cellStyle}">${batch.jobRole}</td>
+                        <td style="${cellStyle}">${batch.skillHub || 'N/A'}</td>
+                        <td style="${cellStyle}">${statusHtml}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
+                                <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px; color: white;">PDF</button>
+                                <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px; color: white;">Attend</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
-            // Auto-check it (since there's only one in the table now it makes sense)
-            const checkbox = wordTableBody.querySelector('.word-batch-select');
-            if (checkbox) {
-                checkbox.checked = true;
-                checkbox.addEventListener('change', toggleBulkButtons);
-                toggleBulkButtons(); // evaluate bulk btns immediately
-            }
+            // Listen for individual changes
+            wordTableBody.querySelectorAll('.word-batch-select').forEach(cb => {
+                cb.addEventListener('change', toggleBulkButtons);
+            });
+            toggleBulkButtons();
         };
 
-        // 5. Bulk Buttons & Quick Select Logic
+        // Bulk Buttons & Quick Select Logic
+
         const toggleBulkButtons = () => {
             const hasSelection = document.querySelectorAll('.word-batch-select:checked').length > 0;
             if (hasSelection) {
