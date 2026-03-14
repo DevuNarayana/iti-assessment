@@ -1,6 +1,6 @@
-import { db, collection, query, where, getDocs } from '../firebase-config.js';
+import { db, collection, query, where, getDocs, addDoc, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '../firebase-config.js';
 import { state } from './state.js';
-import { openLightbox, startAssessment } from './camera.js';
+import { openLightbox, startAssessment, requestLocation } from './camera.js';
 import { showView } from './utils.js';
 
 export function renderAssessorTasks() {
@@ -163,13 +163,141 @@ export function initAssessorListeners() {
     // Assessment Type Options
     document.querySelectorAll('#assessment-options-container .option-card').forEach(card => {
         card.removeAttribute('onclick');
-        const type = card.querySelector('h3').textContent;
+        const h3 = card.querySelector('h3');
+        if (!h3) return;
+        const type = h3.textContent;
 
-        // Attach listener
-        card.addEventListener('click', () => {
-            startAssessment(type);
-        });
+        if (type === 'Smart Folder Upload') {
+            card.addEventListener('click', () => document.getElementById('smart-upload-input').click());
+        } else {
+            card.addEventListener('click', () => {
+                startAssessment(type);
+            });
+        }
     });
+
+    // Smart Folder Upload Handler
+    const smartInput = document.getElementById('smart-upload-input');
+    if (smartInput) {
+        smartInput.addEventListener('change', handleSmartUpload);
+    }
+}
+
+async function handleSmartUpload(e) {
+    const files = Array.from(e.target.files);
+    e.target.value = ''; // Reset
+    if (files.length === 0) return;
+
+    // Categorize
+    const categories = {
+        'Theory': [],
+        'Practical': [],
+        'Viva': [],
+        'Group': [],
+        'Attendance': []
+    };
+    
+    const photoLimits = {
+        'Theory': 2,
+        'Practical': 2,
+        'Viva': 1,
+        'Group': 1,
+        'Attendance': 10
+    };
+
+    files.forEach(file => {
+        const name = file.name.toLowerCase();
+        if (name.includes('theory')) categories['Theory'].push(file);
+        else if (name.includes('practical')) categories['Practical'].push(file);
+        else if (name.includes('viva')) categories['Viva'].push(file);
+        else if (name.includes('group')) categories['Group'].push(file);
+        else if (name.includes('att')) categories['Attendance'].push(file);
+    });
+
+    const categoriesFound = Object.entries(categories).filter(([k, v]) => v.length > 0);
+    if (categoriesFound.length === 0) {
+        alert("No appropriately named files found. Make sure filenames contain 'theory', 'practical', 'viva', 'group', or 'att'.");
+        return;
+    }
+
+    // Force Location
+    requestLocation();
+    
+    const progressDiv = document.getElementById('smart-upload-progress');
+    const statusText = document.getElementById('smart-upload-status');
+    progressDiv.classList.remove('hidden');
+
+    const batch = state.loggedInUser?.batch;
+    const batchId = batch?.batchId || 'Default';
+    const ssc = batch?.ssc || '';
+
+    try {
+        let currentFileNumber = 1;
+        const totalFiles = categoriesFound.reduce((sum, [k, v]) => sum + Math.min(v.length, photoLimits[k]), 0);
+
+        for (const [type, typeFiles] of Object.entries(categories)) {
+            if (typeFiles.length === 0) continue;
+
+            const limit = photoLimits[type];
+            const filesToUpload = typeFiles.slice(0, limit);
+            const uploadedUrls = [];
+
+            statusText.textContent = `Uploading ${type}...`;
+
+            for (let i = 0; i < filesToUpload.length; i++) {
+                statusText.textContent = `Uploading ${type} (${i+1}/${filesToUpload.length}) - File ${currentFileNumber}/${totalFiles}`;
+                currentFileNumber++;
+
+                // Read file to get raw data
+                const base64Str = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.readAsDataURL(filesToUpload[i]);
+                });
+
+                const formData = new FormData();
+                formData.append('file', base64Str);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                const isPdf = base64Str.startsWith('data:application/pdf');
+                const resourceType = isPdf ? 'raw' : 'image';
+
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`${type} upload failed`);
+                }
+                
+                const data = await response.json();
+                uploadedUrls.push(data.secure_url);
+            }
+
+            // Save to Firebase for this category
+            statusText.textContent = `Saving ${type} record...`;
+            const assessmentData = {
+                batchId: batchId,
+                ssc: ssc,
+                type: type,
+                photos: uploadedUrls,
+                timestamp: new Date().toISOString(),
+                username: state.loggedInUser?.username || 'unknown',
+                location: null // using null for smart upload since it's hard to get accurate GPS for old photos
+            };
+            await addDoc(collection(db, "assessments"), assessmentData);
+        }
+
+        statusText.textContent = "All uploads completed successfully!";
+        setTimeout(() => {
+            progressDiv.classList.add('hidden');
+        }, 3000);
+
+    } catch (err) {
+        console.error("Smart Upload Error:", err);
+        statusText.innerHTML = `<span style="color:red">Error: ${err.message}. Please refresh and try again.</span>`;
+    }
 }
 
 // Re-export for use in script.js

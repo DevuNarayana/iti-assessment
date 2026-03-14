@@ -1,3 +1,4 @@
+// Version 138.0 - Added Smart Bulk Folder Upload
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';

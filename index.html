@@ -622,6 +622,23 @@
                                 <p>Attendance sheet photos/PDFs</p>
                             </div>
                         </div>
+                        
+                        <!-- Smart Folder Upload Option -->
+                        <div class="options-grid" style="margin-top: 1rem; grid-template-columns: 1fr;">
+                            <div class="option-card glass-card" onclick="document.getElementById('smart-upload-input').click()" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.3);">
+                                <div class="option-icon">📂</div>
+                                <h3>Smart Folder Upload</h3>
+                                <p>Select a folder to auto-sort photos by name (e.g. theory1, practical2, att.pdf)</p>
+                            </div>
+                            <input type="file" id="smart-upload-input" multiple accept="image/*,.pdf" style="display: none;">
+                        </div>
+
+                        <!-- Smart Upload Progress -->
+                        <div id="smart-upload-progress" class="hidden glass-panel" style="margin-top: 1rem; padding: 1.5rem; text-align: center;">
+                            <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">Processing Smart Upload...</h4>
+                            <div id="smart-upload-status">Initializing...</div>
+                        </div>
+
                         <button class="action-btn" onclick="backToTasks()" style="margin-top: 2rem;">
                             ← Back to My Tasks
                         </button>
