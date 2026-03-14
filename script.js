@@ -1,4 +1,4 @@
-// Version 139.0 - Added History Management and Strict Photo Limits
+// Version 140.0 - Added 3-Step Filter (SSC -> Sector -> Batch) to Word Generator
 import { state } from './js/state.js';
 import { injectStyles, showError, toggleSidebar } from './js/utils.js';
 import { syncData } from './js/services.js';
