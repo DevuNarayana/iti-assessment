@@ -1604,8 +1604,8 @@ function generateGridRows(photos) {
             const p = photos[i + j];
             if (p) {
                 rows += `<td align="center" style="padding: 2pt;">
-                    <div style="border: 4pt solid black; line-height: 0;">
-                        <img src="${p}" style="width: 3.3in; height: 2.8in; object-fit: cover;">
+                    <div style="border: 4pt solid black; line-height: 0; display: inline-block;">
+                        <img src="${p}" style="width: 3.3in; height: 2.8in; object-fit: cover; display: block;">
                     </div>
                 </td>`;
             } else {
