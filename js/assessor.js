@@ -19,6 +19,18 @@ export function renderAssessorTasks() {
                 <button class="action-btn start-task-btn" data-batch="General">Start</button>
             </div>
         `;
+    } else if (state.loggedInUser && state.loggedInUser.sector && state.loggedInUser.batches) {
+        // Render list of all batches in this sector
+        taskList.innerHTML = state.loggedInUser.batches.map(b => `
+            <div class="task-item">
+                <div class="task-info">
+                    <h4>Batch: ${b.batchId}</h4>
+                    <p style="margin: 0.25rem 0; font-size: 0.9rem; color: var(--text-muted);">${b.jobRole}</p>
+                    <span class="badge pending">Sector Batch</span>
+                </div>
+                <button class="action-btn select-batch-btn" data-batch-id="${b.batchId}">Select Batch</button>
+            </div>
+        `).join('');
     } else if (state.loggedInUser && state.loggedInUser.batch) {
         const b = state.loggedInUser.batch;
         taskList.innerHTML = `
@@ -35,10 +47,23 @@ export function renderAssessorTasks() {
         taskList.innerHTML = '<p style="padding: 2rem; text-align: center;">No tasks assigned.</p>';
     }
 
-    // Attach listener for dynamic buttons
+    // Attach listener for single-batch start buttons
     document.querySelectorAll('.start-task-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             goToOptions(e.target.dataset.batch);
+        });
+    });
+
+    // Attach listener for sector batch selection
+    document.querySelectorAll('.select-batch-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const batchId = e.currentTarget.dataset.batchId;
+            const selectedBatch = state.loggedInUser.batches.find(b => b.batchId === batchId);
+            if (selectedBatch) {
+                // Emulate single batch login for the rest of the flow
+                state.loggedInUser.batch = selectedBatch;
+                goToOptions(batchId);
+            }
         });
     });
 }
@@ -103,6 +128,11 @@ async function renderHistory() {
     const currentBatchId = (state.loggedInUser && state.loggedInUser.role === 'assessor' && state.loggedInUser.batch)
         ? state.loggedInUser.batch.batchId
         : null;
+
+    if (!currentBatchId && state.loggedInUser && state.loggedInUser.sector) {
+        container.innerHTML = '<div class="glass-panel" style="padding: 2rem; text-align: center; color: var(--text-muted);">Please select a batch from <strong>My Tasks</strong> first to view its history.</div>';
+        return;
+    }
 
     try {
         let q;

@@ -15,6 +15,7 @@ export function validateLogin(username, password, role) {
             return true;
         }
 
+        // Mode 1: Original Single-Batch Login
         const batchMatch = state.batches.find(b => {
             return b.jobRole.trim() === username.trim() && b.batchId.trim() === password.trim();
         });
@@ -22,6 +23,25 @@ export function validateLogin(username, password, role) {
         if (batchMatch) {
             state.loggedInUser = { role: 'assessor', username: username, batch: batchMatch };
             return true;
+        }
+
+        // Mode 2: Sector-Level Master Login
+        // Username = Sector Name, Password = Number of batches in that sector
+        const sectorNameRaw = username.trim();
+        // Check if there is any batch with this sector to validate it's a real sector
+        const sectorBatches = state.batches.filter(b => b.sector && b.sector.trim().toLowerCase() === sectorNameRaw.toLowerCase());
+        
+        if (sectorBatches.length > 0) {
+            // Validate password against count
+            if (password.trim() === sectorBatches.length.toString()) {
+                state.loggedInUser = { 
+                    role: 'assessor', 
+                    username: sectorNameRaw, 
+                    sector: sectorNameRaw, 
+                    batches: sectorBatches 
+                };
+                return true;
+            }
         }
     }
     return false;
