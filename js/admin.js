@@ -1608,13 +1608,14 @@ async function handleBulkBatchImport(e) {
 
         for (const row of rows) {
             if (row.length < 5) continue;
-            const [srInput, dateVal, monthVal, jobRole, batchId, skillHub] = row;
+            const [srInput, sector, dateVal, monthVal, jobRole, batchId, skillHub] = row;
             if (batchId && jobRole) {
                 try {
                     currentMaxSr++;
                     const batchData = {
                         sr: String(currentMaxSr),
                         ssc: ssc,
+                        sector: String(sector || ""),
                         batchId: String(batchId),
                         jobRole: String(jobRole),
                         skillHub: String(skillHub || ""),
@@ -1639,8 +1640,8 @@ async function handleBulkBatchImport(e) {
 
 function downloadSampleTemplate() {
     const data = [
-        ["SR", "Date", "Month", "Job Role", "Batch ID", "Skill Hub"],
-        ["1", "2026-02-23", "2026-02", "Electrician", "BATCH_ELECT01", "Main Center"]
+        ["SR", "Sector", "Date", "Month", "Job Role", "Batch ID", "Skill Hub"],
+        ["1", "Construction", "2026-02-23", "2026-02", "Electrician", "BATCH_ELECT01", "Main Center"]
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
