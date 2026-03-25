@@ -1201,9 +1201,6 @@ export function renderWordGenerator() {
     const wordFilterSsc = document.getElementById('word-filter-ssc');
     const wordFilterSector = document.getElementById('word-filter-sector');
     const wordTableBody = document.getElementById('word-batch-table-body');
-    const bulkWordBtn = document.getElementById('bulk-word-zip-btn');
-    const bulkPdfBtn = document.getElementById('bulk-pdf-zip-btn');
-    const bulkAttendanceBtn = document.getElementById('bulk-attendance-zip-btn');
 
     // 1. Initialize SSC Dropdown (only once)
     if (wordFilterSsc && wordFilterSsc.options.length === 1) {
@@ -1224,63 +1221,129 @@ export function renderWordGenerator() {
 
             // Hide table contents
             wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Select a Sector Skill Council and Sector to view reports.</td></tr>`;
-            wordTableBody.innerHTML = filteredBatches.map(batch => {
-                const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
-                const hasEnoughPhotos = stats.photos >= 6;
-                const hasAttend = stats.hasAttend;
 
-                let color = '#ffffff'; 
-                let statusText = 'Pending';
-                let icon = '⚪';
-                let statusType = 'pending';
+            if (!selectedSsc) return;
 
-                if (hasEnoughPhotos && hasAttend) {
-                    color = '#22c55e'; // Green
-                    statusText = `Ready (${stats.photos} Ph + Attend)`;
-                    icon = '🟢';
-                    statusType = 'ready';
-                } else if (hasEnoughPhotos) {
-                    color = '#facc15'; // Yellow
-                    statusText = `Photos Only (${stats.photos})`;
-                    icon = '🟡';
-                    statusType = 'photos';
-                } else if (hasAttend) {
-                    color = '#ef4444'; // Red
-                    statusText = 'Attendance Only';
-                    icon = '🔴';
-                    statusType = 'attend';
-                }
+            const sscObj = state.sscs.find(s => s.name === selectedSsc);
+            const sectors = sscObj?.sectors || [];
 
-                // Apply status color logic to columns that need it
-                const statusStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : ''; 
-                const sectorStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 500;` : 'color: #10b981; font-weight: 500;';
-
-                return `
-                    <tr>
-                        <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
-                        <td style="${statusStyle}">${batch.batchId}</td>
-                        <td style="${sectorStyle}">${batch.sector || 'N/A'}</td>
-                        <td style="${statusStyle}">${batch.jobRole}</td>
-                        <td style="${statusStyle}">${batch.skillHub || 'N/A'}</td>
-                        <td><span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span></td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
-                                <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px; color: white;">PDF</button>
-                                <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px; color: white;">Attend</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Listen for individual changes
-            wordTableBody.querySelectorAll('.word-batch-select').forEach(cb => {
-                cb.addEventListener('change', toggleBulkButtons);
+            sectors.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; opt.textContent = s;
+                wordFilterSector.appendChild(opt);
             });
-            toggleBulkButtons();
+
+            if (sectors.length > 0) {
+                const unOpt = document.createElement('option');
+                unOpt.value = 'UNASSIGNED'; unOpt.textContent = 'Unassigned / Legacy';
+                wordFilterSector.appendChild(unOpt);
+            }
+
+            wordFilterSector.disabled = sectors.length === 0;
+
+            // 3. Sector Change Logic
+            wordFilterSector.onchange = () => renderWordTable(selectedSsc, wordFilterSector.value, wordTableBody);
         };
     }
+}
+
+async function renderWordTable(selectedSsc, selectedSector, wordTableBody) {
+    if (!selectedSsc || !selectedSector) return;
+
+    wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">Loading batches...</td></tr>`;
+
+    let filteredBatches = state.batches.filter(b => b.ssc === selectedSsc);
+    if (selectedSector === 'UNASSIGNED') {
+        filteredBatches = filteredBatches.filter(b => !b.sector || b.sector === '' || b.sector === 'N/A');
+    } else {
+        filteredBatches = filteredBatches.filter(b => b.sector === selectedSector);
+    }
+
+    filteredBatches.sort((a, b) => (parseInt(a.sr) || 0) - (parseInt(b.sr) || 0));
+
+    if (filteredBatches.length === 0) {
+        wordTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">No batches found for this sector.</td></tr>`;
+        return;
+    }
+
+    // Fetch assessment stats for all batches in this sector
+    const statusMap = {};
+    try {
+        const batchIds = filteredBatches.map(b => b.batchId);
+        // Query in chunks of 10 (Firestore 'in' limit)
+        const chunks = [];
+        for (let i = 0; i < batchIds.length; i += 10) chunks.push(batchIds.slice(i, i + 10));
+
+        for (const chunk of chunks) {
+            const snap = await getDocs(query(collection(db, 'assessments'), where('batchId', 'in', chunk)));
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                if (!statusMap[d.batchId]) statusMap[d.batchId] = { photos: 0, hasAttend: false };
+                if (d.type === 'Attendance') {
+                    statusMap[d.batchId].hasAttend = true;
+                } else if (d.photos) {
+                    statusMap[d.batchId].photos += d.photos.length;
+                }
+            });
+        }
+    } catch (err) {
+        console.warn('Could not fetch assessment stats:', err);
+    }
+
+    wordTableBody.innerHTML = filteredBatches.map(batch => {
+        const stats = statusMap[batch.batchId] || { photos: 0, hasAttend: false };
+        const hasEnoughPhotos = stats.photos >= 6;
+        const hasAttend = stats.hasAttend;
+
+        let color = '#ffffff';
+        let statusText = 'Pending';
+        let icon = '⚪';
+        let statusType = 'pending';
+
+        if (hasEnoughPhotos && hasAttend) {
+            color = '#22c55e';
+            statusText = `Ready (${stats.photos} Ph + Attend)`;
+            icon = '🟢';
+            statusType = 'ready';
+        } else if (hasEnoughPhotos) {
+            color = '#facc15';
+            statusText = `Photos Only (${stats.photos})`;
+            icon = '🟡';
+            statusType = 'photos';
+        } else if (hasAttend) {
+            color = '#ef4444';
+            statusText = 'Attendance Only';
+            icon = '🔴';
+            statusType = 'attend';
+        }
+
+        const statusStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 600;` : '';
+        const sectorStyle = color !== '#ffffff' ? `color: ${color} !important; font-weight: 500;` : 'color: #10b981; font-weight: 500;';
+
+        return `
+            <tr>
+                <td><input type="checkbox" class="word-batch-select" data-id="${batch.batchId}" data-status-type="${statusType}"></td>
+                <td style="${statusStyle}">${batch.batchId}</td>
+                <td style="${sectorStyle}">${batch.sector || 'N/A'}</td>
+                <td style="${statusStyle}">${batch.jobRole}</td>
+                <td style="${statusStyle}">${batch.skillHub || 'N/A'}</td>
+                <td><span style="color: ${color}; font-size: 11px;">${icon} ${statusText}</span></td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="action-btn" onclick="generateWordDoc(false, '${batch.batchId}')" style="background: #2563eb; padding: 4px 12px; font-size: 12px; color: white;">Word</button>
+                        <button class="action-btn" onclick="generateWordDoc(true, '${batch.batchId}')" style="background: #e11d48; padding: 4px 12px; font-size: 12px; color: white;">PDF</button>
+                        <button class="action-btn" onclick="generateAttendanceReportForBatch('${batch.batchId}')" style="background: #9333ea; padding: 4px 12px; font-size: 12px; color: white;">Attend</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Listen for individual checkbox changes
+    wordTableBody.querySelectorAll('.word-batch-select').forEach(cb => {
+        cb.addEventListener('change', toggleBulkButtons);
+    });
+    toggleBulkButtons();
 }
 
 // Global hook for single attendance
