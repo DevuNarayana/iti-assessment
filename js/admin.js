@@ -1538,7 +1538,7 @@ export async function generateWordDoc(isPdf = false, targetBatchId = null, isBul
 
         // PDF HTML
         htmlPagesForPdf += `
-            <div style="${pageBreakPdf} width: 8.27in; height: 11.69in; padding: 0; box-sizing: border-box; background: white; margin: 0;">
+            <div style="${pageBreakPdf} width: 8.27in; height: 11.69in; padding: 0.25in; box-sizing: border-box; background: white; margin: 0 auto;">
                 <div style="border: 7.5pt solid black; height: 100%; padding: 10pt; box-sizing: border-box;">
                     <div style="text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 10pt; color: black; padding-top: 10pt;">
                          <p style="margin: 0;">Name of the Skill Hub: ${batch.skillHub || 'NAC-Bhimavaram'}</p>
