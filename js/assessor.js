@@ -451,30 +451,41 @@ async function handleBulkSectorUpload(e) {
     const statusText = document.getElementById('bulk-sector-upload-status');
     if(progressDiv) progressDiv.classList.remove('hidden');
 
-    // Group files by Batch ID based on folder name
-    // e.g., files[0].webkitRelativePath = "Master/Ban2025-09-24 151113/theory1.jpg"
-    const batchesMap = {};
+    const sectorBatches = state.loggedInUser?.batches || [];
+    
+    // Create a map to securely match Windows folder names (no colons) to Real Batch IDs
+    const validBatchMap = {};
+    sectorBatches.forEach(b => {
+        const normalized = b.batchId.replace(/:/g, '').toLowerCase().trim();
+        validBatchMap[normalized] = b.batchId;
+    });
+
+    const batchesMap = {}; // Real Batch IDs as keys
 
     files.forEach(file => {
-        // Find the batch ID folder. Usually the second-to-last item.
         const pathParts = file.webkitRelativePath.split('/');
         if (pathParts.length >= 2) {
-            const batchFolderName = pathParts[pathParts.length - 2];
-            if (!batchesMap[batchFolderName]) {
-                batchesMap[batchFolderName] = {
-                    'Theory': [],
-                    'Practical': [],
-                    'Viva': [],
-                    'Group': [],
-                    'Attendance': []
-                };
+            const rawFolderName = pathParts[pathParts.length - 2];
+            const normalizedFolder = rawFolderName.replace(/:/g, '').toLowerCase().trim();
+            const realBatchId = validBatchMap[normalizedFolder];
+
+            if (realBatchId) {
+                if (!batchesMap[realBatchId]) {
+                    batchesMap[realBatchId] = {
+                        'Theory': [],
+                        'Practical': [],
+                        'Viva': [],
+                        'Group': [],
+                        'Attendance': []
+                    };
+                }
+                const name = file.name.toLowerCase();
+                if (name.includes('theory')) batchesMap[realBatchId]['Theory'].push(file);
+                else if (name.includes('practical')) batchesMap[realBatchId]['Practical'].push(file);
+                else if (name.includes('viva')) batchesMap[realBatchId]['Viva'].push(file);
+                else if (name.includes('group')) batchesMap[realBatchId]['Group'].push(file);
+                else if (name.includes('att')) batchesMap[realBatchId]['Attendance'].push(file);
             }
-            const name = file.name.toLowerCase();
-            if (name.includes('theory')) batchesMap[batchFolderName]['Theory'].push(file);
-            else if (name.includes('practical')) batchesMap[batchFolderName]['Practical'].push(file);
-            else if (name.includes('viva')) batchesMap[batchFolderName]['Viva'].push(file);
-            else if (name.includes('group')) batchesMap[batchFolderName]['Group'].push(file);
-            else if (name.includes('att')) batchesMap[batchFolderName]['Attendance'].push(file);
         }
     });
 
@@ -486,14 +497,10 @@ async function handleBulkSectorUpload(e) {
         'Attendance': 10
     };
 
-    // Filter valid batches in this sector
-    const sectorBatches = state.loggedInUser?.batches || [];
-    const validBatchIds = sectorBatches.map(b => b.batchId);
-
-    const validFolders = Object.keys(batchesMap).filter(folderName => validBatchIds.includes(folderName));
+    const validFolders = Object.keys(batchesMap);
 
     if (validFolders.length === 0) {
-        if(statusText) statusText.innerHTML = `<span style="color:red">No subfolders matched any Batch IDs in this sector. Make sure subfolders are named EXACTLY like the Batch IDs.</span>`;
+        if(statusText) statusText.innerHTML = `<span style="color:red">No subfolders matched any Batch IDs in this sector. Make sure subfolders are named like the Batch IDs (e.g., Ban2025-09-24 151113).</span>`;
         setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 5000);
         return;
     }
