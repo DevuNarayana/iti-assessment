@@ -461,6 +461,7 @@ async function handleBulkSectorUpload(e) {
     });
 
     const batchesMap = {}; // Real Batch IDs as keys
+    const unrecognizedFolders = new Set(); // Track folders that missed
 
     files.forEach(file => {
         const pathParts = file.webkitRelativePath.split('/');
@@ -485,6 +486,8 @@ async function handleBulkSectorUpload(e) {
                 else if (name.includes('viva')) batchesMap[realBatchId]['Viva'].push(file);
                 else if (name.includes('group')) batchesMap[realBatchId]['Group'].push(file);
                 else if (name.includes('att')) batchesMap[realBatchId]['Attendance'].push(file);
+            } else {
+                unrecognizedFolders.add(rawFolderName);
             }
         }
     });
@@ -500,8 +503,12 @@ async function handleBulkSectorUpload(e) {
     const validFolders = Object.keys(batchesMap);
 
     if (validFolders.length === 0) {
-        if(statusText) statusText.innerHTML = `<span style="color:red">No subfolders matched any Batch IDs in this sector. Make sure subfolders are named like the Batch IDs (e.g., Ban2025-09-24 151113).</span>`;
-        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 5000);
+        let errorMsg = `<span style="color:red">No subfolders matched any Batch IDs in this sector.</span>`;
+        if (unrecognizedFolders.size > 0) {
+            errorMsg += `<br><span style="color: #facc15; font-size: 0.9em;">Skipped unrecognized folders: ${Array.from(unrecognizedFolders).join(', ')}</span>`;
+        }
+        if(statusText) statusText.innerHTML = errorMsg;
+        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 7000);
         return;
     }
 
@@ -589,8 +596,15 @@ async function handleBulkSectorUpload(e) {
             currentBatchNum++;
         }
 
-        if(statusText) statusText.innerHTML = `<span style="color: #10b981;">All batch folder uploads completed successfully!</span>`;
-        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 5000);
+        let successMsg = `<span style="color: #10b981;">Successfully uploaded files for ${validFolders.length} batches!</span>`;
+        if (unrecognizedFolders.size > 0) {
+            const skipped = Array.from(unrecognizedFolders).join(', ');
+            successMsg += `<br><span style="color: #facc15; font-size: 0.9em;">Warning: Skipped unrecognized folders (${skipped})</span>`;
+            alert(`Upload process finished.\n\nWARNING: The following folders were skipped because their names did not match any batches in this Sector:\n\n${skipped}`);
+        }
+
+        if(statusText) statusText.innerHTML = successMsg;
+        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 8000);
 
     } catch (err) {
         console.error("Bulk Sector Upload Error:", err);
