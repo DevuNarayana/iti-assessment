@@ -21,7 +21,18 @@ export function renderAssessorTasks() {
         `;
     } else if (state.loggedInUser && state.loggedInUser.sector && state.loggedInUser.batches) {
         // Render list of all batches in this sector
-        taskList.innerHTML = state.loggedInUser.batches.map(b => `
+        const sectorHeaderStr = `
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h4 style="color: #a855f7; margin-bottom: 0.25rem;">Bulk Sector Folder Upload</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Select a master folder containing subfolders for each batch.</p>
+                </div>
+                <button class="action-btn" onclick="document.getElementById('bulk-sector-upload-input').click()" style="background: #9333ea; color: white;">Upload Master Folder</button>
+            </div>
+            <h3 style="margin-bottom: 1rem;">Batches in ${state.loggedInUser.sector}</h3>
+        `;
+        
+        taskList.innerHTML = sectorHeaderStr + state.loggedInUser.batches.map(b => `
             <div class="task-item">
                 <div class="task-info">
                     <h4>Batch: ${b.batchId}</h4>
@@ -275,6 +286,12 @@ export function initAssessorListeners() {
     if (smartInput) {
         smartInput.addEventListener('change', handleSmartUpload);
     }
+    
+    // Bulk Sector Folder Upload Handler
+    const bulkSectorInput = document.getElementById('bulk-sector-upload-input');
+    if (bulkSectorInput) {
+        bulkSectorInput.addEventListener('change', handleBulkSectorUpload);
+    }
 }
 
 async function handleSmartUpload(e) {
@@ -422,6 +439,155 @@ async function handleSmartUpload(e) {
     } catch (err) {
         console.error("Smart Upload Error:", err);
         statusText.innerHTML = `<span style="color:red">Error: ${err.message}. Please refresh and try again.</span>`;
+    }
+}
+
+async function handleBulkSectorUpload(e) {
+    const files = Array.from(e.target.files);
+    e.target.value = ''; // Reset
+    if (files.length === 0) return;
+
+    const progressDiv = document.getElementById('bulk-sector-upload-progress');
+    const statusText = document.getElementById('bulk-sector-upload-status');
+    if(progressDiv) progressDiv.classList.remove('hidden');
+
+    // Group files by Batch ID based on folder name
+    // e.g., files[0].webkitRelativePath = "Master/Ban2025-09-24 151113/theory1.jpg"
+    const batchesMap = {};
+
+    files.forEach(file => {
+        // Find the batch ID folder. Usually the second-to-last item.
+        const pathParts = file.webkitRelativePath.split('/');
+        if (pathParts.length >= 2) {
+            const batchFolderName = pathParts[pathParts.length - 2];
+            if (!batchesMap[batchFolderName]) {
+                batchesMap[batchFolderName] = {
+                    'Theory': [],
+                    'Practical': [],
+                    'Viva': [],
+                    'Group': [],
+                    'Attendance': []
+                };
+            }
+            const name = file.name.toLowerCase();
+            if (name.includes('theory')) batchesMap[batchFolderName]['Theory'].push(file);
+            else if (name.includes('practical')) batchesMap[batchFolderName]['Practical'].push(file);
+            else if (name.includes('viva')) batchesMap[batchFolderName]['Viva'].push(file);
+            else if (name.includes('group')) batchesMap[batchFolderName]['Group'].push(file);
+            else if (name.includes('att')) batchesMap[batchFolderName]['Attendance'].push(file);
+        }
+    });
+
+    const photoLimits = {
+        'Theory': 2,
+        'Practical': 2,
+        'Viva': 1,
+        'Group': 1,
+        'Attendance': 10
+    };
+
+    // Filter valid batches in this sector
+    const sectorBatches = state.loggedInUser?.batches || [];
+    const validBatchIds = sectorBatches.map(b => b.batchId);
+
+    const validFolders = Object.keys(batchesMap).filter(folderName => validBatchIds.includes(folderName));
+
+    if (validFolders.length === 0) {
+        if(statusText) statusText.innerHTML = `<span style="color:red">No subfolders matched any Batch IDs in this sector. Make sure subfolders are named EXACTLY like the Batch IDs.</span>`;
+        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 5000);
+        return;
+    }
+
+    try {
+        let currentBatchNum = 1;
+        const totalBatches = validFolders.length;
+
+        for (const batchId of validFolders) {
+            const categories = batchesMap[batchId];
+            const batchObj = sectorBatches.find(b => b.batchId === batchId);
+            const ssc = batchObj?.ssc || '';
+
+            // Check history
+            const existingHistory = await getBatchHistory(batchId);
+            const uploadedCounts = {
+                'Theory': 0, 'Practical': 0, 'Viva': 0, 'Group': 0, 'Attendance': 0
+            };
+            
+            existingHistory.forEach(record => {
+                if (uploadedCounts[record.type] !== undefined) {
+                    uploadedCounts[record.type] += (record.photos ? record.photos.length : 0);
+                }
+            });
+
+            // Prepare files to upload without exceeding limits
+            for (const [type, typeFiles] of Object.entries(categories)) {
+                const alreadyUploaded = uploadedCounts[type];
+                const limit = photoLimits[type];
+                if (alreadyUploaded >= limit && typeFiles.length > 0) {
+                    categories[type] = []; // Skip
+                } else if (alreadyUploaded + typeFiles.length > limit) {
+                    const allowedNew = limit - alreadyUploaded;
+                    categories[type] = typeFiles.slice(0, allowedNew);
+                }
+            }
+
+            const categoriesFoundAfterFilter = Object.entries(categories).filter(([k, v]) => v.length > 0);
+            if (categoriesFoundAfterFilter.length === 0) {
+                console.log(`Skipping batch ${batchId}: No new valid files or limits reached.`);
+                continue;
+            }
+
+            // Begin Upload Sequence for this Batch
+            for (const [type, filesToUpload] of categoriesFoundAfterFilter) {
+                if(statusText) statusText.textContent = `Batch ${currentBatchNum}/${totalBatches} (${batchId}): Uploading ${type}...`;
+                const uploadedUrls = [];
+
+                for (let i = 0; i < filesToUpload.length; i++) {
+                    const base64Str = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => resolve(event.target.result);
+                        reader.readAsDataURL(filesToUpload[i]);
+                    });
+
+                    const formData = new FormData();
+                    formData.append('file', base64Str);
+                    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                    const isPdf = base64Str.startsWith('data:application/pdf');
+                    const resourceType = isPdf ? 'raw' : 'image';
+
+                    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error(`${type} upload failed for Batch ${batchId}`);
+                    
+                    const data = await response.json();
+                    uploadedUrls.push(data.secure_url);
+                }
+
+                if(statusText) statusText.textContent = `Batch ${currentBatchNum}/${totalBatches} (${batchId}): Saving ${type} record...`;
+                const assessmentData = {
+                    batchId: batchId,
+                    ssc: ssc,
+                    type: type,
+                    photos: uploadedUrls,
+                    timestamp: new Date().toISOString(),
+                    username: state.loggedInUser?.username || 'unknown',
+                    location: null
+                };
+                await addDoc(collection(db, "assessments"), assessmentData);
+            }
+            currentBatchNum++;
+        }
+
+        if(statusText) statusText.innerHTML = `<span style="color: #10b981;">All batch folder uploads completed successfully!</span>`;
+        setTimeout(() => { if(progressDiv) progressDiv.classList.add('hidden') }, 5000);
+
+    } catch (err) {
+        console.error("Bulk Sector Upload Error:", err);
+        if(statusText) statusText.innerHTML = `<span style="color:red">Error: ${err.message}. Please refresh and try again.</span>`;
     }
 }
 

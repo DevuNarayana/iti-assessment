@@ -586,6 +586,11 @@
                         <div class="user-profile">Assessor User</div>
                     </header>
                     <div id="assessor-tasks-container">
+                        <div id="bulk-sector-upload-progress" class="hidden glass-panel" style="margin-bottom: 1.5rem; padding: 1.5rem; text-align: center;">
+                            <h4 style="margin-bottom: 0.5rem; color: #a855f7;">Processing Bulk Sector Upload...</h4>
+                            <div id="bulk-sector-upload-status">Initializing...</div>
+                        </div>
+                        <input type="file" id="bulk-sector-upload-input" webkitdirectory directory multiple style="display: none;">
                         <div class="task-list glass-panel" id="assessor-task-list">
                             <!-- Tasks will be rendered here dynamically -->
                         </div>
