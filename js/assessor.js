@@ -316,18 +316,24 @@ async function handleSmartUpload(e) {
         'Attendance': 10
     };
 
+    const tMatch = /(^|[^a-z0-9])(t1|t2|theory1|theory2|theory)($|[^a-z0-9])/;
+    const pMatch = /(^|[^a-z0-9])(p1|p2|practical1|practical2|practical)($|[^a-z0-9])/;
+    const vMatch = /(^|[^a-z0-9])(v|viva)($|[^a-z0-9])/;
+    const gMatch = /(^|[^a-z0-9])(g|group)($|[^a-z0-9])/;
+    const aMatch = /(^|[^a-z0-9])(att|attendance)($|[^a-z0-9])/;
+
     files.forEach(file => {
         const name = file.name.toLowerCase();
-        if (name.includes('theory')) categories['Theory'].push(file);
-        else if (name.includes('practical')) categories['Practical'].push(file);
-        else if (name.includes('viva')) categories['Viva'].push(file);
-        else if (name.includes('group')) categories['Group'].push(file);
-        else if (name.includes('att')) categories['Attendance'].push(file);
+        if (tMatch.test(name)) categories['Theory'].push(file);
+        else if (pMatch.test(name)) categories['Practical'].push(file);
+        else if (vMatch.test(name)) categories['Viva'].push(file);
+        else if (gMatch.test(name)) categories['Group'].push(file);
+        else if (aMatch.test(name)) categories['Attendance'].push(file);
     });
 
     const categoriesFound = Object.entries(categories).filter(([k, v]) => v.length > 0);
     if (categoriesFound.length === 0) {
-        alert("No appropriately named files found. Make sure filenames contain 'theory', 'practical', 'viva', 'group', or 'att'.");
+        alert("No appropriately named files found. Make sure filenames contain 't1/t2', 'p1/p2', 'v', 'g', or 'att'.");
         return;
     }
 
@@ -463,6 +469,12 @@ async function handleBulkSectorUpload(e) {
     const batchesMap = {}; // Real Batch IDs as keys
     const unrecognizedFolders = new Set(); // Track folders that missed
 
+    const tMatch = /(^|[^a-z0-9])(t1|t2|theory1|theory2|theory)($|[^a-z0-9])/;
+    const pMatch = /(^|[^a-z0-9])(p1|p2|practical1|practical2|practical)($|[^a-z0-9])/;
+    const vMatch = /(^|[^a-z0-9])(v|viva)($|[^a-z0-9])/;
+    const gMatch = /(^|[^a-z0-9])(g|group)($|[^a-z0-9])/;
+    const aMatch = /(^|[^a-z0-9])(att|attendance)($|[^a-z0-9])/;
+
     files.forEach(file => {
         const pathParts = file.webkitRelativePath.split('/');
         if (pathParts.length >= 2) {
@@ -481,11 +493,11 @@ async function handleBulkSectorUpload(e) {
                     };
                 }
                 const name = file.name.toLowerCase();
-                if (name.includes('theory')) batchesMap[realBatchId]['Theory'].push(file);
-                else if (name.includes('practical')) batchesMap[realBatchId]['Practical'].push(file);
-                else if (name.includes('viva')) batchesMap[realBatchId]['Viva'].push(file);
-                else if (name.includes('group')) batchesMap[realBatchId]['Group'].push(file);
-                else if (name.includes('att')) batchesMap[realBatchId]['Attendance'].push(file);
+                if (tMatch.test(name)) batchesMap[realBatchId]['Theory'].push(file);
+                else if (pMatch.test(name)) batchesMap[realBatchId]['Practical'].push(file);
+                else if (vMatch.test(name)) batchesMap[realBatchId]['Viva'].push(file);
+                else if (gMatch.test(name)) batchesMap[realBatchId]['Group'].push(file);
+                else if (aMatch.test(name)) batchesMap[realBatchId]['Attendance'].push(file);
             } else {
                 unrecognizedFolders.add(rawFolderName);
             }
